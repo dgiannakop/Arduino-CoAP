@@ -19,7 +19,6 @@ void Coap::init( SimpleTimer* timer, SoftwareSerial *mySerial, XBeeRadio *xbee, 
    largeBuf_ = largeBuf;
 
    mid_ = random( 65536 / 2 );
-   runme = 1;
    //register built-in resource discovery resource
    delegate = fastdelegate::MakeDelegate( this, &Coap::resource_discovery );
    resources_[0].set_method( 0, GET );
@@ -40,7 +39,6 @@ void Coap::init( SimpleTimer* timer, XBeeRadio *xbee, XBeeRadioResponse *respons
    largeBuf_ = largeBuf;
 
    mid_ = random( 65536 / 2 );
-   runme = 1;
    //register built-in resource discovery resource
    delegate = fastdelegate::MakeDelegate( this, &Coap::resource_discovery );
    resources_[0].set_method( 0, GET );
@@ -54,16 +52,6 @@ void Coap::init( SimpleTimer* timer, XBeeRadio *xbee, XBeeRadioResponse *respons
 #endif
 void Coap::handler()
 {
-   /*
-   if( runme == 1 )
-   {
-      //uint8_t buffer[18] = {51, 0x42,0x01,0xf7,0x73,0x97,0x73,0x65,0x6e,0x73,0x6f,0x72,0x73,0x04,0x74,0x65,0x6d,0x70};
-      //uint8_t buffer[30] = {51, 0x43,0x01,0x87,0x13,0x97,0x73,0x65,0x6e,0x73,0x6f,0x72,0x73,0x04,0x74,0x65,0x6d,0x70,0x6b,0x61,0x63,0x74,0x3d,0x6f,0x62,0x73,0x65,0x72,0x76,0x65};
-      //uint8_t buffer[22] = {51, 0x42, 0x01, 0x47, 0x4d, 0x9b, 0x2e, 0x77, 0x65, 0x6c, 0x6c, 0x2d, 0x6b, 0x6e, 0x6f, 0x77, 0x6e, 0x04, 0x63, 0x6f, 0x72, 0x65};
-      //receiver( buffer, 0x153d, 22 );
-      runme = 0;
-   }
-   */
    //returns true if there is a packet for us on the port
    if( xbee_->checkForData( 110 ) )
    {
@@ -240,7 +228,6 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
          response.set_type( NON );
       coap_send( &response, from );
       //DBG(mySerial_->println("ACTION: Sent reply"));
-      //debug().debug( "ACTION: Sent reply" );
    }
 } // end of coap receiver
 
@@ -280,7 +267,6 @@ coap_status_t Coap::coap_get_resource( uint8_t method, uint8_t id, uint8_t qid, 
       return INTERNAL_SERVER_ERROR;
    }
    *data_len = resources_[id].payload_len_w();
-   //*data_len = strlen( resources_[id].payload() );
    return CONTENT;
 }
 void Coap::coap_blockwise_response( coap_packet_t *req, coap_packet_t *resp, uint8_t **data, uint8_t *data_len )
@@ -340,15 +326,9 @@ void Coap::coap_register_con_msg( uint16_t id, uint16_t mid, uint8_t *buf, uint8
          retransmit_size_[i] = size;
          memcpy( retransmit_packet_[i], buf, size );
          // ARDUINO
-         //DBG(mySerial_->print(i));
-         //DBG(mySerial_->print(" "));
-         //DBG(mySerial_->print(mid));
-         //DBG(mySerial_->print(" "));
          timeout_ = 1000 * ( retransmit_timeout_and_tries_[i] >> 4 );
          retransmit_timestamp_[i] = millis() + timeout_;
          timer_->setTimeout( timeout_, Wrapper::timerInterrupt );
-         //DBG(mySerial_->print(timeout_));
-         //DBG(mySerial_->println(""));
          return;
       }
       i++;
@@ -394,8 +374,7 @@ void Coap::coap_retransmit_loop( void )
       //DBG(mySerial_->println(retransmit_register_[i]));
       if ( retransmit_register_[i] == 1 )
       {
-         //DBG(mySerial_->println(millis()));
-         //DBG(mySerial_->println(retransmit_timestamp_[i]));
+         // -60 is used because there is always a faut in time
          if ( retransmit_timestamp_[i] >= millis() - 60 )
          {
             retransmit_timeout_and_tries_[i] += 1;
@@ -471,7 +450,6 @@ uint8_t Coap::coap_add_observer( coap_packet_t *msg, uint16_t *id, uint8_t resou
       observe_resource_[free_slot-1] = resource_id;
       observe_last_mid_[free_slot-1] = msg->mid_w();
       // ARDUINO
-
       timer_->setTimeout( 1000 * resources_[resource_id].notify_time_w(), Wrapper::observeTimerInterrupt );
       return 1;
    }
@@ -490,7 +468,6 @@ void Coap::coap_remove_observer( uint16_t mid )
          observe_resource_[i] = 0;
          memset( observe_token_[i], 0, observe_token_len_[i] );
          observe_token_len_[i] = 0;
-         //debug().debug( "Observer removed" );
       }
    }
 }
