@@ -11,8 +11,6 @@ class CoapResource
 {
    public:
       void init();
-      //template<class T, char* ( T::*TMethod ) ( uint8_t )>
-      //void reg_callback( T *obj_pnt, uint8_t qid );
       void reg_callback(my_delegate_t delegate, uint8_t qid );
       void execute( uint8_t qid, uint8_t par );
       void reg_resource( String name, bool fast_resource, uint16_t notify_time, uint8_t resource_len, uint8_t content_type );

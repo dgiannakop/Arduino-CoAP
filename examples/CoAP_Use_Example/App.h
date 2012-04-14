@@ -6,7 +6,7 @@
 
 // your app must have an init function where your resource is registered in coap
 // callback functions must be char* function(uint8_t method)
-// with method you can implement different operations for GET/PUT requests
+// with method you can implement different operations for GET/PUT/POST/DELETE requests
 
 class App
 {

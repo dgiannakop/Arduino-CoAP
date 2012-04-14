@@ -15,9 +15,8 @@ void App::init( resource_t* resources, uint8_t rid, char* data )
    resources[rid_].reg_callback( delegate, 0 );
    // register the resource with arguments: Name, FastRespone, Default NotifyTime, Expected Length, ContentType
    // Zero default notification time, disables observing capability
+   // Expected Length doesn't really matter
    resources[rid_].reg_resource( "sensors/temp", true, 120, 5, TEXT_PLAIN );
-   //resources[rid_+1].reg_resource( "sensors/light", true, 90, 5, TEXT_PLAIN );
-   //resources[rid_+2].reg_resource( "test/large_uri/for_testing", true, 90, 5, TEXT_PLAIN );
 
    delegate = fastdelegate::MakeDelegate( this, &App::temp_status );
    resources[rid].set_method( 1, GET );
@@ -70,5 +69,3 @@ char* App::change_observe_timer( uint8_t method )
 // in case of a new value, you want to notify your observers.
 // from your routine you must call "coap_notify_from_interrupt( rid_ );"
 // observers will be notified
-
-

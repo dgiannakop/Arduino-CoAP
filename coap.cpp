@@ -402,7 +402,6 @@ void Coap::coap_retransmit_loop( void )
             timeout_factor = timeout_factor << ( 0x0F & retransmit_timeout_and_tries_[i] );
             // ARDUINO
             DBG( mySerial_->println( "RETRANSMIT" ) );
-            //debug().debug( "RETRANSMIT!! %d, tries: %d", ( int ) i, 0x0F & retransmit_timeout_and_tries_[( int ) i] );
             tx_ = Tx16Request( retransmit_id_[i], retransmit_packet_[i], retransmit_size_[i] );
             xbee_->send( tx_ );
 
@@ -420,7 +419,6 @@ void Coap::coap_retransmit_loop( void )
                timeout_ = timeout_factor * 1000 * ( retransmit_timeout_and_tries_[i] >> 4 );
                retransmit_timestamp_[i] = millis() + timeout_;
                timer_->setTimeout( timeout_, Wrapper::timerInterrupt );
-               //timer().template set_timer<Coap, &Coap::coap_retransmit_loop > ( timeout_factor * 1000 * ( retransmit_timeout_and_tries_[( int ) i] >> 4 ), this, ( void * ) i );
                return;
             }
          }
@@ -544,7 +542,6 @@ void Coap::coap_notify( uint8_t resource_id )
          }
          else
          {
-            //debug().debug( "NOTIFY: Sensor value: %s", data_value );
             notification.set_code( CONTENT );
             notification.set_option( CONTENT_TYPE );
             notification.set_content_type( resources_[resource_id].content_type() );
@@ -562,9 +559,7 @@ void Coap::coap_notify( uint8_t resource_id )
          // ARDUINO
          tx_ = Tx16Request( observe_id_[i], buf_, notification_size );
          xbee_->send( tx_ );
-         //radio().send( observe_id_[i], notification_size, buf_ );
          timer_->setTimeout( 1000 * resources_[resource_id].notify_time_w(), Wrapper::observeTimerInterrupt );
-         //timer().template set_timer<Coap, &Coap::coap_notify_from_timer > ( 1000 * resources_[( int )resource_id].notify_time_w(), this, ( void * )resource_id );
       }
    }
    increase_observe_counter();
