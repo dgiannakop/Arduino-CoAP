@@ -12,12 +12,11 @@ class App
 {
    public:
       void init( resource_t* resources, uint8_t rid, char* data );
-      char* get_temp( uint8_t method );
-      char* temp_status( uint8_t method );
-      char* change_observe_timer(uint8_t method );
+      char* get_temp( uint8_t rid, uint8_t method );
+      char* temp_status( uint8_t rid, uint8_t method );
+      char* change_observe_timer(uint8_t rid, uint8_t method );
    private:
       resource_t* resources_;
-      uint8_t rid_;
       char* data_;
 };
 #endif

@@ -12,7 +12,7 @@ class CoapResource
    public:
       void init();
       void reg_callback(my_delegate_t delegate, uint8_t qid );
-      void execute( uint8_t qid, uint8_t par );
+      void execute( uint8_t rid, uint8_t qid, uint8_t par );
       void reg_resource( String name, bool fast_resource, uint16_t notify_time, uint8_t resource_len, uint8_t content_type );
       void reg_query( uint8_t qid, String name );
       uint8_t has_query( String query );

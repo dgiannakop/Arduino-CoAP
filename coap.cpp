@@ -261,7 +261,7 @@ bool Coap::find_resource( uint8_t* i, String uri_path )
 
 coap_status_t Coap::coap_get_resource( uint8_t method, uint8_t id, uint8_t qid, uint8_t* data_len )
 {
-   resources_[id].execute( qid, method );
+   resources_[id].execute( id, qid, method );
    if ( resources_[id].payload() == NULL )
    {
       return INTERNAL_SERVER_ERROR;

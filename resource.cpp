@@ -16,12 +16,12 @@ void CoapResource::reg_callback( my_delegate_t delegate, uint8_t qid )
    del_[qid] = delegate;
 }
 
-void CoapResource::execute( uint8_t qid, uint8_t par )
+void CoapResource::execute( uint8_t rid, uint8_t qid, uint8_t par )
 {
    payload_ = NULL;
    if( del_[qid] )
    {
-      payload_ = del_[qid]( par );
+      payload_ = del_[qid]( rid, par );
       input_data_ = NULL;
    }
 }
