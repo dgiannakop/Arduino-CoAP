@@ -5,7 +5,7 @@
 #define CONF_MAX_RESOURCES                  2
 #define CONF_MAX_RESOURCE_QUERIES           3
 #define CONF_MAX_OBSERVERS                  2
-#define CONF_MAX_MSG_LEN                    112
+#define CONF_MAX_MSG_LEN                    99
 #define CONF_MAX_PAYLOAD_LEN                64
 #define CONF_PIGGY_BACKED                   1
 #define CONF_MAX_RETRANSMIT_SLOTS           2

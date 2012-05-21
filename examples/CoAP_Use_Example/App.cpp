@@ -1,7 +1,8 @@
 #include "App.h"
 
-void App::init( resource_t* resources, uint8_t rid, char* data )
+void App::init( Coap* coap, resource_t* resources, uint8_t rid, char* data )
 {
+   coap_ = coap;
    resources_ = resources;
    data_ = data;
    my_delegate_t delegate;
@@ -23,18 +24,17 @@ void App::init( resource_t* resources, uint8_t rid, char* data )
    resources[rid].reg_callback( delegate, 1 );
    // QuerryID, QuerryName
    resources[rid].reg_query( 1, "act=status" );
-
+*/
    delegate = fastdelegate::MakeDelegate( this, &App::change_observe_timer );
    resources[rid].set_method( 2, GET );
    resources[rid].set_method( 2, PUT );
    resources[rid].reg_callback( delegate, 2 );
    resources[rid].reg_query( 2, "act=observe" );
-*/
 }
 
 char* App::get_temp( uint8_t rid, uint8_t method )
 {
-   //resources_[rid].set_payload_len(sprintf(data_, "working" ));
+   resources_[rid].set_payload_len(sprintf(data_, "working" ));
    return data_;
 }
 
@@ -46,7 +46,6 @@ char* App::temp_status( uint8_t rid, uint8_t method )
 
 char* App::change_observe_timer( uint8_t rid, uint8_t method )
 {
-   /*
    uint8_t* data = resources_[rid].input_data_w();
    uint8_t len = resources_[rid].input_data_len_w();
    uint16_t value = 0;
@@ -65,7 +64,6 @@ char* App::change_observe_timer( uint8_t rid, uint8_t method )
       resources_[rid].set_payload_len(sprintf( data_, "set:%d", value ));
    }
    return data_;
-   */
 }
 
 // in case of a new value, you want to notify your observers.

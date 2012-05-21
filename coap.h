@@ -3,7 +3,7 @@
 
 #include <XbeeRadio.h>
 #include <SimpleTimer.h>
-#include <SoftwareSerial.h>
+//#include <SoftwareSerial.h>
 #include "coap_conf.h"
 #include "packet.h"
 #include "resource.h"
@@ -19,7 +19,7 @@ class Coap
       void init( SimpleTimer* timer, XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, resource_t* resources, uint8_t* buf, char* largeBuf );
 #endif
       void handler( void );
-      char* resource_discovery( uint8_t method );
+      char* resource_discovery( uint8_t rid, uint8_t method );
       void receiver( uint8_t*, uint16_t, uint8_t );
       void coap_send( coap_packet_t*, uint16_t );
       uint16_t coap_new_mid();
@@ -57,6 +57,8 @@ class Coap
       // Serial debug
       SoftwareSerial *mySerial_;
 #endif
+      bool broadcasting;
+      unsigned long broadcast_timestamp;
       // Message ID
       uint16_t mid_;
       // Resources pointer

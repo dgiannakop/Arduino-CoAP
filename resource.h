@@ -5,7 +5,7 @@
 #include "coap_conf.h"
 #include "FastDelegate.h"
 
-typedef fastdelegate::FastDelegate1<uint8_t, char *> my_delegate_t;
+typedef fastdelegate::FastDelegate2<uint8_t, uint8_t, char *> my_delegate_t;
 
 class CoapResource
 {

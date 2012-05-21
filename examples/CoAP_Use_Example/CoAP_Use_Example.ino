@@ -51,11 +51,11 @@ void setup()
 {
   pinMode(10, OUTPUT);
   // comment out for debuging
-  //xbee_.initialize_xbee_module();
+  xbee_.initialize_xbee_module();
   //start our XbeeRadio object and set our baudrate to 38400.
   xbee.begin( 38400 );
   //Initialize our XBee module with the correct values (using the default channel, channel 12)h
-  xbee.init(18);
+  xbee.init(12);
   // set coap object for callback functions
   Wrapper::setObj(coap);
   // init coap service 
@@ -67,7 +67,7 @@ void setup()
     mySerial.println("INIT DONE");
   #else
     coap.init( &timer, &xbee, &response, &rx, resources, buf, largeBuf );
-    testApp.init( resources, 1, largeBuf );
+    testApp.init( &coap, resources, 1, largeBuf );
   #endif
   // resource id 0 is reserved for built in resource-discovery
   // init test resource, with resource id 1

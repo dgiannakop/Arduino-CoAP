@@ -38,6 +38,9 @@ void Coap::init( SimpleTimer* timer, XBeeRadio *xbee, XBeeRadioResponse *respons
    buf_ = buf;
    largeBuf_ = largeBuf;
 
+   broadcasting = true;
+   broadcast_timestamp = millis() + 2000;
+
    mid_ = random( 65536 / 2 );
    //register built-in resource discovery resource
    delegate = fastdelegate::MakeDelegate( this, &Coap::resource_discovery );
@@ -53,8 +56,17 @@ void Coap::init( SimpleTimer* timer, XBeeRadio *xbee, XBeeRadioResponse *respons
 void Coap::handler()
 {
    //returns true if there is a packet for us on the port
-   if( xbee_->checkForData( 110 ) )
+   if (broadcasting == true && broadcast_timestamp <= millis() - 60)
    {
+      buf_[0] = 0x01;
+      //buf_[1] = 0x01;
+      tx_ = Tx16Request( 0xffff, buf_, 1 );
+      xbee_->send( tx_, 112 );
+      broadcast_timestamp = millis() + 3000;
+   }
+   if( xbee_->checkForData( 112 ) )
+   {
+      //broadcasting = false;
       // blink, just for debug
       digitalWrite( 10, HIGH ); // set the LED on
       delay( 50 );
@@ -62,13 +74,19 @@ void Coap::handler()
       //get our response and save it on our response variable
       xbee_->getResponse().getRx16Response( *rx_ );
       //call the receiver
+      tx_ = Tx16Request( 0xffff, xbee_->getResponse().getData(), xbee_->getResponse().getDataLength());
+      xbee_->send( tx_, 112);
       receiver( xbee_->getResponse().getData(), rx_->getRemoteAddress16(), xbee_->getResponse().getDataLength() );
    }
 
 }
 
-char* Coap::resource_discovery( uint8_t method )
+char* Coap::resource_discovery( uint8_t rid, uint8_t method )
 {
+   if(broadcasting == true )
+   {
+      broadcasting = false;
+   }
    memset( buf_, 0, sizeof( buf_ ) );
    coap_resource_discovery( largeBuf_ );
    return largeBuf_;
@@ -123,9 +141,11 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
             case CON:
                response.set_type( ACK );
                response.set_mid( msg.mid_w() );
+               break;
             case NON:
                response.set_type( NON );
                response.set_mid( msg.mid_w() );
+               break;
             default:
                // ACK or RST on a get request. Not a valid coap message, ignore
                return;
@@ -239,7 +259,7 @@ void Coap::coap_send( coap_packet_t *msg, uint16_t dest )
       coap_register_con_msg( dest, msg->mid_w(), buf_, data_len, 0 );
    }
    tx_ = Tx16Request( dest, buf_, data_len );
-   xbee_->send( tx_ );
+   xbee_->send( tx_, 112 );
    DBG( debug_msg( buf_, data_len ) );
 }
 uint16_t Coap::coap_new_mid()
@@ -511,7 +531,7 @@ void Coap::coap_notify( uint8_t resource_id )
          notification.set_type( CON );
          notification.set_mid( coap_new_mid() );
 
-         resources_[resource_id].execute( 0, GET );
+         resources_[resource_id].execute( resource_id, 0, GET );
          data_value = resources_[resource_id].payload( );
          if( data_value == NULL )
          {
