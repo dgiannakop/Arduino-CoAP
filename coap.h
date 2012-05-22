@@ -2,7 +2,7 @@
 #define coap_h
 
 #include <XbeeRadio.h>
-#include <SimpleTimer.h>
+//#include <SimpleTimer.h>
 //#include <SoftwareSerial.h>
 #include "coap_conf.h"
 #include "packet.h"
@@ -14,9 +14,9 @@ class Coap
 {
    public:
 #ifdef DEBUG
-      void init( SimpleTimer* timer, SoftwareSerial *mySerial_, XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, resource_t* resources, uint8_t* buf, char* largeBuf );
+      void init( /*SimpleTimer* timer,*/ SoftwareSerial *mySerial_, XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, resource_t* resources, uint8_t* buf, char* largeBuf );
 #else
-      void init( SimpleTimer* timer, XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, resource_t* resources, uint8_t* buf, char* largeBuf );
+      void init( /*SimpleTimer* timer,*/ XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, resource_t* resources, uint8_t* buf, char* largeBuf );
 #endif
       void handler( void );
       char* resource_discovery( uint8_t rid, uint8_t method );
@@ -52,13 +52,13 @@ class Coap
       // create a tx16 request object
       Tx16Request tx_;
       // timer for interupts
-      SimpleTimer *timer_;
+      //SimpleTimer *timer_;
 #ifdef DEBUG
       // Serial debug
       SoftwareSerial *mySerial_;
 #endif
       bool broadcasting;
-      unsigned long broadcast_timestamp;
+      unsigned long timestamp;
       // Message ID
       uint16_t mid_;
       // Resources pointer

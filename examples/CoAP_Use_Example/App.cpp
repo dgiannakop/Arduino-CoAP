@@ -16,7 +16,7 @@ void App::init( Coap* coap, resource_t* resources, uint8_t rid, char* data )
    // register the resource with arguments: Name, FastRespone, Default NotifyTime, Expected Length, ContentType
    // Zero default notification time, disables observing capability
    // Expected Length doesn't really matter
-   resources[rid].reg_resource( "sensors/temp", true, 120, 5, TEXT_PLAIN );
+   resources[rid].reg_resource( "sensors/temp", true, 30, 5, TEXT_PLAIN );
 /*
    delegate = fastdelegate::MakeDelegate( this, &App::temp_status );
    resources[rid].set_method( 1, GET );

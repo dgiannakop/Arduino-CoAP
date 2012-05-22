@@ -9,10 +9,10 @@
 #endif
 
 #ifdef DEBUG
-void Coap::init( SimpleTimer* timer, SoftwareSerial *mySerial, XBeeRadio *xbee, XBeeRadioResponse *response, Rx16Response *rx, resource_t* resources, uint8_t* buf, char* largeBuf )
+void Coap::init(/*SimpleTimer* timer,*/ SoftwareSerial *mySerial, XBeeRadio *xbee, XBeeRadioResponse *response, Rx16Response *rx, resource_t* resources, uint8_t* buf, char* largeBuf )
 {
    my_delegate_t delegate;
-   timer_ = timer;
+   //timer_ = timer;
    mySerial_ = mySerial;
    resources_ = resources;
    buf_ = buf;
@@ -30,18 +30,18 @@ void Coap::init( SimpleTimer* timer, SoftwareSerial *mySerial, XBeeRadio *xbee, 
    rx_  = rx;
 }
 #else
-void Coap::init( SimpleTimer* timer, XBeeRadio *xbee, XBeeRadioResponse *response, Rx16Response *rx, resource_t* resources, uint8_t* buf, char* largeBuf )
+void Coap::init( /*SimpleTimer* timer,*/ XBeeRadio *xbee, XBeeRadioResponse *response, Rx16Response *rx, resource_t* resources, uint8_t* buf, char* largeBuf )
 {
    my_delegate_t delegate;
-   timer_ = timer;
+   //timer_ = timer;
    resources_ = resources;
    buf_ = buf;
    largeBuf_ = largeBuf;
 
    broadcasting = true;
-   broadcast_timestamp = millis() + 2000;
-
+   timestamp = millis() + 2000;
    mid_ = random( 65536 / 2 );
+   observe_counter_ = 1;
    //register built-in resource discovery resource
    delegate = fastdelegate::MakeDelegate( this, &Coap::resource_discovery );
    resources_[0].set_method( 0, GET );
@@ -55,14 +55,18 @@ void Coap::init( SimpleTimer* timer, XBeeRadio *xbee, XBeeRadioResponse *respons
 #endif
 void Coap::handler()
 {
-   //returns true if there is a packet for us on the port
-   if (broadcasting == true && broadcast_timestamp <= millis() - 60)
+   if (timestamp <= millis() - 60)
    {
-      buf_[0] = 0x01;
-      //buf_[1] = 0x01;
-      tx_ = Tx16Request( 0xffff, buf_, 1 );
-      xbee_->send( tx_, 112 );
-      broadcast_timestamp = millis() + 3000;
+      if ( broadcasting == true)
+      {
+         buf_[0] = 0x01;
+         //buf_[1] = 0x01;
+         tx_ = Tx16Request( 0xffff, buf_, 1 );
+         xbee_->send( tx_, 112 );
+      }
+      coap_notify_from_timer();
+      coap_retransmit_loop();
+      timestamp = millis() + 1000;
    }
    if( xbee_->checkForData( 112 ) )
    {
@@ -74,8 +78,8 @@ void Coap::handler()
       //get our response and save it on our response variable
       xbee_->getResponse().getRx16Response( *rx_ );
       //call the receiver
-      tx_ = Tx16Request( 0xffff, xbee_->getResponse().getData(), xbee_->getResponse().getDataLength());
-      xbee_->send( tx_, 112);
+      //tx_ = Tx16Request( 0xffff, xbee_->getResponse().getData(), xbee_->getResponse().getDataLength());
+      //xbee_->send( tx_, 112);
       receiver( xbee_->getResponse().getData(), rx_->getRemoteAddress16(), xbee_->getResponse().getDataLength() );
    }
 
@@ -348,7 +352,7 @@ void Coap::coap_register_con_msg( uint16_t id, uint16_t mid, uint8_t *buf, uint8
          // ARDUINO
          timeout_ = 1000 * ( retransmit_timeout_and_tries_[i] >> 4 );
          retransmit_timestamp_[i] = millis() + timeout_;
-         timer_->setTimeout( timeout_, Wrapper::timerInterrupt );
+         //timer_->setTimeout( timeout_, Wrapper::timerInterrupt );
          return;
       }
       i++;
@@ -395,7 +399,7 @@ void Coap::coap_retransmit_loop( void )
       if ( retransmit_register_[i] == 1 )
       {
          // -60 is used because there is always a faut in time
-         if ( retransmit_timestamp_[i] >= millis() - 60 )
+         if ( retransmit_timestamp_[i] <= millis() - 60 )
          {
             retransmit_timeout_and_tries_[i] += 1;
             timeout_factor = timeout_factor << ( 0x0F & retransmit_timeout_and_tries_[i] );
@@ -417,7 +421,7 @@ void Coap::coap_retransmit_loop( void )
                // ARDUINO
                timeout_ = timeout_factor * 1000 * ( retransmit_timeout_and_tries_[i] >> 4 );
                retransmit_timestamp_[i] = millis() + timeout_;
-               timer_->setTimeout( timeout_, Wrapper::timerInterrupt );
+               //timer_->setTimeout( timeout_, Wrapper::timerInterrupt );
                return;
             }
          }
@@ -470,7 +474,8 @@ uint8_t Coap::coap_add_observer( coap_packet_t *msg, uint16_t *id, uint8_t resou
       observe_resource_[free_slot-1] = resource_id;
       observe_last_mid_[free_slot-1] = msg->mid_w();
       // ARDUINO
-      timer_->setTimeout( 1000 * resources_[resource_id].notify_time_w(), Wrapper::observeTimerInterrupt );
+      observe_timestamp_[free_slot-1] = millis() + 1000* resources_[resource_id].notify_time_w();
+      //timer_->setTimeout( 1000 * resources_[resource_id].notify_time_w(), Wrapper::observeTimerInterrupt );
       return 1;
    }
    return 0;
@@ -488,6 +493,7 @@ void Coap::coap_remove_observer( uint16_t mid )
          observe_resource_[i] = 0;
          memset( observe_token_[i], 0, observe_token_len_[i] );
          observe_token_len_[i] = 0;
+         observe_timestamp_[i] = 0;
       }
    }
 }
@@ -497,7 +503,20 @@ void Coap::coap_notify_from_timer()
    uint8_t rid;
    for( rid = 0; rid < CONF_MAX_RESOURCES; rid++ )
    {
-      if ( resources_[rid].interrupt_flag_w() == true && observe_timestamp_[rid] >= millis() - 60 )
+      if ((observe_id_[rid] != 0) && (observe_timestamp_[rid] <= millis() - 60))
+      {
+         if (resources_[rid].interrupt_flag_w() == true)
+         {
+            resources_[rid].set_interrupt_flag( false );
+            //return;
+         }
+         else
+         {
+            coap_notify( rid );
+         }
+      }
+      /*
+      if ( resources_[rid].interrupt_flag_w() == true && observe_timestamp_[rid] <= millis() - 60 )
       {
          resources_[rid].set_interrupt_flag( false );
          return;
@@ -506,6 +525,7 @@ void Coap::coap_notify_from_timer()
       {
          coap_notify( rid );
       }
+      */
    }
 }
 
@@ -556,7 +576,8 @@ void Coap::coap_notify( uint8_t resource_id )
          // ARDUINO
          tx_ = Tx16Request( observe_id_[i], buf_, notification_size );
          xbee_->send( tx_ );
-         timer_->setTimeout( 1000 * resources_[resource_id].notify_time_w(), Wrapper::observeTimerInterrupt );
+         observe_timestamp_[i] = millis() + 1000* resources_[resource_id].notify_time_w();
+         //timer_->setTimeout( 1000 * resources_[resource_id].notify_time_w(), Wrapper::observeTimerInterrupt );
       }
    }
    increase_observe_counter();
