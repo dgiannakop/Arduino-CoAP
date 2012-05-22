@@ -3,7 +3,6 @@ Communication based on XbeeRadio https://github.com/mksense/mac/tree/master/xbee
 
 ***************************
 * This branch is working as an implementation of the 8th version of the CoAP protocol.
-
 * In this branch many things have changed:
    - resource class revamped
    - resources are now internal to coap object using vector type
@@ -12,10 +11,8 @@ Communication based on XbeeRadio https://github.com/mksense/mac/tree/master/xbee
    - callback function prototypes and usage
    - uri queries are now closer to the standar and allow multiple queries per request
    - apps are now easier to use coap library, with less code needed
-
 * Not fully tested
    - uri queries are not tested
-
 * Current TODO list:
    - Make retransmit and observe arrays of vector type
    - Reduce code size
@@ -40,4 +37,7 @@ Communication based on XbeeRadio https://github.com/mksense/mac/tree/master/xbee
  ** License along with the Arduino-CoAP.                                       **
  ** If not, see <http://www.gnu.org/licenses/>.                                **
  *******************************************************************************/
+
+
+Current code has been tested and woking on Arduino UNO, and Arduino Pro Mini
 
