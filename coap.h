@@ -75,8 +75,7 @@ class Coap
       uint8_t retransmit_packet_[CONF_MAX_RETRANSMIT_SLOTS][CONF_MAX_MSG_LEN];
       unsigned long retransmit_timestamp_[CONF_MAX_RETRANSMIT_SLOTS];
       unsigned long timeout_;
-#ifdef OBSERVING
-      // observe variables
+
       uint16_t observe_id_[CONF_MAX_OBSERVERS];
       uint8_t observe_token_[CONF_MAX_OBSERVERS][8];
       uint8_t observe_token_len_[CONF_MAX_OBSERVERS];
@@ -84,6 +83,9 @@ class Coap
       uint8_t observe_resource_[CONF_MAX_OBSERVERS];
       uint16_t observe_counter_;
       unsigned long observe_timestamp_[CONF_MAX_OBSERVERS];
+#ifdef OBSERVING
+      // observe variables
+
 #endif
 };
 

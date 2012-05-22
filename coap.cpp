@@ -72,9 +72,9 @@ void Coap::handler()
    {
       //broadcasting = false;
       // blink, just for debug
-      digitalWrite( 10, HIGH ); // set the LED on
-      delay( 50 );
-      digitalWrite( 10, LOW );  // set the LED off
+      //digitalWrite( 10, HIGH ); // set the LED on
+      //delay( 50 );
+      //digitalWrite( 10, LOW );  // set the LED off
       //get our response and save it on our response variable
       xbee_->getResponse().getRx16Response( *rx_ );
       //call the receiver
@@ -406,7 +406,7 @@ void Coap::coap_retransmit_loop( void )
             // ARDUINO
             DBG( mySerial_->println( "RETRANSMIT" ) );
             tx_ = Tx16Request( retransmit_id_[i], retransmit_packet_[i], retransmit_size_[i] );
-            xbee_->send( tx_ );
+            xbee_->send( tx_, 112 );
 
             if ( ( 0x0F & retransmit_timeout_and_tries_[i] ) == CONF_COAP_MAX_RETRANSMIT_TRIES )
             {
@@ -515,17 +515,6 @@ void Coap::coap_notify_from_timer()
             coap_notify( rid );
          }
       }
-      /*
-      if ( resources_[rid].interrupt_flag_w() == true && observe_timestamp_[rid] <= millis() - 60 )
-      {
-         resources_[rid].set_interrupt_flag( false );
-         return;
-      }
-      else
-      {
-         coap_notify( rid );
-      }
-      */
    }
 }
 
@@ -575,9 +564,8 @@ void Coap::coap_notify( uint8_t resource_id )
          observe_last_mid_[i] = notification.mid_w();
          // ARDUINO
          tx_ = Tx16Request( observe_id_[i], buf_, notification_size );
-         xbee_->send( tx_ );
+         xbee_->send( tx_, 112 );
          observe_timestamp_[i] = millis() + 1000* resources_[resource_id].notify_time_w();
-         //timer_->setTimeout( 1000 * resources_[resource_id].notify_time_w(), Wrapper::observeTimerInterrupt );
       }
    }
    increase_observe_counter();

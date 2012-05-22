@@ -15,7 +15,9 @@ class App
       char* get_temp( uint8_t rid, uint8_t method );
       char* temp_status( uint8_t rid, uint8_t method );
       char* change_observe_timer(uint8_t rid, uint8_t method );
+      char* debug_info(uint8_t rid, uint8_t method );
    private:
+       uint8_t ledState;
       Coap* coap_;
       resource_t* resources_;
       char* data_;

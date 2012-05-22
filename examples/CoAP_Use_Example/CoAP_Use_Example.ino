@@ -17,9 +17,7 @@
 //Include Libraries
 #include <XBee.h>
 #include <XbeeRadio.h>
-#include <SimpleTimer.h>
 #include <SoftwareSerial.h>
-#include <Wrapper.h>
 #include <coap.h>
 #include "App.h"
 
@@ -43,13 +41,13 @@ XBeeRadio xbee = XBeeRadio();
 XBeeRadioResponse response = XBeeRadioResponse();
 // create a reusable rx16 response object to get the address
 Rx16Response rx = Rx16Response();
-// simple timer object
-SimpleTimer timer;
 
 //Runs only once
 void setup()
 {
   pinMode(10, OUTPUT);
+  pinMode(9, OUTPUT);
+  digitalWrite( 9, LOW );
   // comment out for debuging
   xbee.initialize_xbee_module();
   //start our XbeeRadio object and set our baudrate to 38400.
@@ -57,7 +55,7 @@ void setup()
   //Initialize our XBee module with the correct values (using the default channel, channel 12)h
   xbee.init(12);
   // set coap object for callback functions
-  Wrapper::setObj(coap);
+  //Wrapper::setObj(coap);
   // init coap service 
   #ifdef DEBUG
     mySerial.begin(9600);
@@ -66,7 +64,7 @@ void setup()
     testApp.init( resources, 1, largeBuf );
     mySerial.println("INIT DONE");
   #else
-    coap.init( &timer, &xbee, &response, &rx, resources, buf, largeBuf );
+    coap.init( &xbee, &response, &rx, resources, buf, largeBuf );
     testApp.init( &coap, resources, 1, largeBuf );
   #endif
   // resource id 0 is reserved for built in resource-discovery
@@ -78,6 +76,5 @@ void loop()
 {
   // nothing else should be done here. CoAP service is running
   // if there is a request for your resource, your callback function will be triggered
-  timer.run();
   coap.handler();
 }
