@@ -118,7 +118,7 @@ char* Coap::resource_discovery( uint8_t method, uint8_t* input_data, size_t inpu
       broadcasting = false;
    }
    memset( buf_, 0, sizeof( buf_ ) );
-   coap_resource_discovery( largeBuf_, output_data_len );
+   coap_resource_discovery( output_data_len );
    return largeBuf_;
 }
 
@@ -134,7 +134,7 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
    uint8_t resource_id = 0;
    uint8_t query_id = 0;
    uint8_t *output_data = NULL;
-   size_t output_data_len;
+   size_t output_data_len = 0;
    msg.init();
    response.init();
 
@@ -448,21 +448,18 @@ void Coap::coap_retransmit_loop( void )
    }
 }
 
-void Coap::coap_resource_discovery( char* data, size_t *payload_len )
+void Coap::coap_resource_discovery( size_t *payload_len )
 {
    uint8_t rid;
    String output;// = String("<.well-known/core>;ct=40");
-   for( rid = 0; rid < CONF_MAX_RESOURCES; rid++ )
+   for( rid = 0; rid < resources_.size(); rid++ )
    {
-      if( resources_[rid].is_set() == true )
-      {
-         // ARDUINO
-         output += "<" + resources_[rid].name() + ">;ct=" + resources_[rid].content_type() + ",";
-      }
+      // ARDUINO
+      output += "<" + resources_[rid].name() + ">;ct=" + resources_[rid].content_type() + ",";
    }
-   output.toCharArray( data, CONF_LARGE_BUF_LEN );
-   data[output.length()-1] = '\0';
-   *payload_len = strlen( data );
+   output.toCharArray( largeBuf_, CONF_LARGE_BUF_LEN );
+   largeBuf_[output.length()-1] = '\0';
+   *payload_len = strlen( largeBuf_ );
    //DBG(mySerial_->println(data));
 }
 #ifdef OBSERVING

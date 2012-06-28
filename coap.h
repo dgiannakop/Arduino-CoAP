@@ -17,7 +17,7 @@ class Coap
 {
    public:
 #ifdef DEBUG
-      void init( SoftwareSerial *mySerial_, XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, resource_t* resources, uint8_t* buf, char* largeBuf );
+      void init( SoftwareSerial *mySerial, XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, resource_t* resources, uint8_t* buf, char* largeBuf );
 #else
       void init( XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, uint8_t* buf, char* largeBuf );
 #endif
@@ -36,7 +36,7 @@ class Coap
       void coap_register_con_msg( uint16_t id, uint16_t mid, uint8_t *buf, uint8_t size, uint8_t tries );
       uint8_t coap_unregister_con_msg( uint16_t mid, uint8_t flag );
       void coap_retransmit_loop();
-      void coap_resource_discovery( char* data, size_t *payload_len );
+      void coap_resource_discovery( size_t *payload_len );
 #ifdef OBSERVING
       uint8_t coap_add_observer( coap_packet_t *msg, uint16_t *id, uint8_t resource_id );
       void coap_remove_observer( uint16_t mid );
