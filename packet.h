@@ -118,7 +118,7 @@ class CoapPacket
 {
    public:
       void init( void );
-      coap_status_t buffer_to_packet( uint8_t len, uint8_t* buf );
+      coap_status_t buffer_to_packet( uint8_t len, uint8_t* buf, char* largeBuf );
       uint8_t packet_to_buffer( uint8_t* buf );
       // get
       uint8_t version_w();
@@ -137,8 +137,8 @@ class CoapPacket
       uint8_t token_len_w();
       uint8_t* token_w();
       uint16_t accept_w();
-      size_t uri_query_len_w();
-      char* uri_query_w();
+      //size_t uri_query_len_w();
+      //char* uri_query_w();
       queries_t uri_queries_w();
       uint32_t block2_num_w();
       uint8_t block2_more_w();
@@ -163,8 +163,8 @@ class CoapPacket
       void set_token_len( uint8_t token_len );
       void set_token( uint8_t* token );
       void set_accept( uint16_t accept );
-      void set_uri_query_len( size_t uri_query_len );
-      void set_uri_query( char* uri_query );
+      //void set_uri_query_len( size_t uri_query_len );
+      void set_uri_query( String uri_query_name, String uri_query_value );
       void set_block2_num( uint32_t block2_num );
       void set_block2_more( uint8_t block2_more );
       void set_block2_size( uint16_t block2_size );
@@ -177,8 +177,10 @@ class CoapPacket
       uint8_t set_int_opt_value( uint8_t opt, uint8_t current_delta, uint8_t *buf, uint32_t value );
       uint32_t get_int_opt_value( uint8_t *value, uint16_t length );
       void merge_options( char **dst, size_t *dst_len, uint8_t *value, uint16_t length, char seperator );
+      void make_uri_query(uint8_t* value, uint16_t length, char* largeBuf);
       uint8_t split_option( uint8_t opt, uint8_t current_delta, uint8_t* buf, char* seperator );
       uint8_t power_of_two( uint16_t num );
+      String make_string( char* charArray, size_t charLen, char* largeBuf );
    private:
       uint8_t version_;
       uint8_t type_;
@@ -208,9 +210,9 @@ class CoapPacket
       //TODO...
       //uint8_t if_match_len_; // 13
       //uint8_t if_match_[8]; // 13
-      size_t uri_query_len_; // 15
-      char *uri_query_; // 15
-      queries_t queries_;
+      //size_t uri_query_len_; // 15
+      //char *uri_query_; // 15
+      queries_t queries_; // 15
 
       // block2 17
       uint32_t block2_num_; // 17

@@ -146,7 +146,7 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
    response.init();
 
    memset( buf_, 0, CONF_MAX_MSG_LEN );
-   coap_error_code = msg.buffer_to_packet( len, buf );
+   coap_error_code = msg.buffer_to_packet( len, buf, largeBuf_ );
    if ( msg.version_w() != COAP_VERSION )
    {
       coap_error_code = BAD_REQUEST;
