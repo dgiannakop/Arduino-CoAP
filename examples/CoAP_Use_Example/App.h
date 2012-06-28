@@ -11,15 +11,11 @@
 class App
 {
    public:
-      void init( Coap* coap, resource_t* resources, uint8_t rid, char* data );
-      char* get_temp( uint8_t rid, uint8_t method );
-      char* temp_status( uint8_t rid, uint8_t method );
-      char* change_observe_timer(uint8_t rid, uint8_t method );
-      char* debug_info(uint8_t rid, uint8_t method );
+      void init( Coap* coap, char* data );
+      char* test( uint8_t method, uint8_t* input_data, size_t input_data_len, size_t* outpu_len, queries_t queries );
    private:
        uint8_t ledState;
       Coap* coap_;
-      resource_t* resources_;
       char* data_;
 };
 #endif

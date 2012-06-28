@@ -17,7 +17,7 @@
 //Include Libraries
 #include <XBee.h>
 #include <XbeeRadio.h>
-#include <SoftwareSerial.h>
+//#include <SoftwareSerial.h>
 #include <coap.h>
 #include "App.h"
 
@@ -29,7 +29,7 @@
 // coap object
 Coap coap;
 // resources
-resource_t resources[CONF_MAX_RESOURCES];
+//resource_t resources[CONF_MAX_RESOURCES];
 // your app
 App testApp;
 // resource buffer
@@ -64,8 +64,8 @@ void setup()
     testApp.init( resources, 1, largeBuf );
     mySerial.println("INIT DONE");
   #else
-    coap.init( &xbee, &response, &rx, resources, buf, largeBuf );
-    testApp.init( &coap, resources, 1, largeBuf );
+    coap.init( &xbee, &response, &rx, buf, largeBuf );
+    testApp.init( &coap, largeBuf );
   #endif
   // resource id 0 is reserved for built in resource-discovery
   // init test resource, with resource id 1
