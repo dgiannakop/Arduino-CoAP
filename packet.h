@@ -1,8 +1,16 @@
 #ifndef PACKET_H
-#define  PACKET_H
+#define PACKET_H
 
 #include <Arduino.h>
+#include "vector.h"
 #include "coap_conf.h"
+
+typedef struct query_t
+{
+   String name;
+   String value;
+};
+typedef Vector<query_t> queries_t;
 
 typedef enum
 {
@@ -26,12 +34,22 @@ typedef enum
    IF_NONE_MATCH = 21
 } coap_option_t;
 
+// non coap method values
 typedef enum
 {
    GET = 1,
-   POST,
-   PUT,
-   DELETE
+   POST = 2,
+   PUT = 4,
+   DELETE = 8
+} app_method_t;
+
+// coap method values
+typedef enum
+{
+   COAP_GET = 1,
+   COAP_POST,
+   COAP_PUT,
+   COAP_DELETE
 } coap_method_t;
 
 typedef enum
@@ -121,11 +139,12 @@ class CoapPacket
       uint16_t accept_w();
       size_t uri_query_len_w();
       char* uri_query_w();
+      queries_t uri_queries_w();
       uint32_t block2_num_w();
       uint8_t block2_more_w();
       uint16_t block2_size_w();
       uint32_t block2_offset_w();
-      uint8_t payload_len_w();
+      size_t payload_len_w();
       uint8_t* payload_w();
       // set
       void set_version( uint8_t version );
@@ -191,6 +210,8 @@ class CoapPacket
       //uint8_t if_match_[8]; // 13
       size_t uri_query_len_; // 15
       char *uri_query_; // 15
+      queries_t queries_;
+
       // block2 17
       uint32_t block2_num_; // 17
       uint8_t block2_more_; // 17

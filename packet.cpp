@@ -391,6 +391,10 @@ char* CoapPacket::uri_query_w()
 {
    return uri_query_;
 }
+queries_t CoapPacket::uri_queries_w()
+{
+   return queries_;
+}
 uint32_t CoapPacket::block2_num_w()
 {
    return block2_num_;
@@ -407,7 +411,7 @@ uint32_t CoapPacket::block2_offset_w()
 {
    return block2_offset_;
 }
-uint8_t CoapPacket::payload_len_w()
+size_t CoapPacket::payload_len_w()
 {
    return payload_len_;
 }
