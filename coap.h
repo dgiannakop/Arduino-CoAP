@@ -17,15 +17,15 @@ class Coap
 {
    public:
 #ifdef DEBUG
-      void init( /*SimpleTimer* timer,*/ SoftwareSerial *mySerial_, XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, resource_t* resources, uint8_t* buf, char* largeBuf );
+      void init( SoftwareSerial *mySerial_, XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, resource_t* resources, uint8_t* buf, char* largeBuf );
 #else
-      void init( /*SimpleTimer* timer,*/ XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, uint8_t* buf, char* largeBuf );
+      void init( XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, uint8_t* buf, char* largeBuf );
 #endif
       void handler( void );
-      void add_resource(String name, uint8_t methods, my_delegate_t callback, bool fast_resource, uint16_t notify_time, uint8_t content_type);
-      void update_resource(String name, uint8_t methods, bool fast_resource, int notify_time, uint8_t content_type);
-      void remove_resource(String name);
-      resource_t resource(uint8_t resource_id);
+      void add_resource( String name, uint8_t methods, my_delegate_t callback, bool fast_resource, uint16_t notify_time, uint8_t content_type );
+      void update_resource( String name, uint8_t methods, bool fast_resource, int notify_time, uint8_t content_type );
+      void remove_resource( String name );
+      resource_t resource( uint8_t resource_id );
       char* resource_discovery( uint8_t method, uint8_t* input_data, size_t input_data_len, size_t* output_len, queries_t queries );
       void receiver( uint8_t*, uint16_t, uint8_t );
       void coap_send( coap_packet_t*, uint16_t );
@@ -58,8 +58,6 @@ class Coap
       Rx16Response *rx_;
       // create a tx16 request object
       Tx16Request tx_;
-      // timer for interupts
-      //SimpleTimer *timer_;
 #ifdef DEBUG
       // Serial debug
       SoftwareSerial *mySerial_;
@@ -68,8 +66,6 @@ class Coap
       unsigned long timestamp;
       // Message ID
       uint16_t mid_;
-      // Resources pointer
-      //resource_t* resources_;
       // new vector type resources
       vector_t resources_;
 

@@ -104,7 +104,7 @@ coap_status_t CoapPacket::buffer_to_packet( uint8_t len, uint8_t* buf, char* lar
                break;
             case URI_QUERY:
                set_option( URI_QUERY );
-               make_uri_query(current_opt, opt_len, largeBuf);
+               make_uri_query( current_opt, opt_len, largeBuf );
                //merge_options( &uri_query_, &uri_query_len_, current_opt, opt_len, '&' );
                break;
             case BLOCK2:
@@ -283,18 +283,18 @@ void CoapPacket::merge_options( char **dst, size_t *dst_len, uint8_t *value, uin
 void CoapPacket::make_uri_query( uint8_t* value, uint16_t length, char* largeBuf )
 {
    uint16_t split_position = 0;
-   for(int i=0; i<length; i++)
+   for( int i = 0; i < length; i++ )
    {
-      if(value[i] == 61) // ascii of "="
+      if( value[i] == 61 ) // ascii of "="
       {
          split_position = i;
          break;
       }
    }
    query_t new_query;
-   new_query.name = make_string((char*)value, split_position, largeBuf);
-   new_query.value = make_string((char*)value+split_position+1, length - split_position - 1, largeBuf);
-   queries_.push_back(new_query);
+   new_query.name = make_string( ( char* )value, split_position, largeBuf );
+   new_query.value = make_string( ( char* )value + split_position + 1, length - split_position - 1, largeBuf );
+   queries_.push_back( new_query );
 }
 uint8_t CoapPacket::split_option( uint8_t opt, uint8_t current_delta, uint8_t* buf, char* seperator )
 {
@@ -404,16 +404,6 @@ uint16_t CoapPacket::accept_w()
 {
    return accept_;
 }
-/*
-size_t CoapPacket::uri_query_len_w()
-{
-   return uri_query_len_;
-}
-char* CoapPacket::uri_query_w()
-{
-   return uri_query_;
-}
-*/
 queries_t CoapPacket::uri_queries_w()
 {
    return queries_;
@@ -507,18 +497,12 @@ void CoapPacket::set_accept( uint16_t accept )
 {
    accept_ = accept;
 }
-/*
-void CoapPacket::set_uri_query_len( size_t uri_query_len )
-{
-   uri_query_len_ = uri_query_len;
-}
-*/
 void CoapPacket::set_uri_query( String uri_query_name, String uri_query_value )
 {
    query_t new_query;
    new_query.name = uri_query_name;
    new_query.value = uri_query_value;
-   queries_.push_back(new_query);
+   queries_.push_back( new_query );
 }
 void CoapPacket::set_block2_num( uint32_t block2_num )
 {
