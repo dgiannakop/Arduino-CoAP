@@ -12,11 +12,11 @@ CoapResource::CoapResource( String name, uint8_t methods, my_delegate_t delegate
    interrupt_flag_ = false;
 }
 
-void CoapResource::execute( uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries )
+coap_status_t CoapResource::execute( uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries )
 {
    if( del_ )
    {
-      output_data = ( uint8_t* )del_( method, input_data, input_data_len, output_data_len, queries );
+      return del_( method, input_data, input_data_len, output_data, output_data_len, queries );
    }
 }
 

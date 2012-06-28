@@ -118,7 +118,7 @@ class CoapPacket
 {
    public:
       void init( void );
-      coap_status_t buffer_to_packet( uint8_t len, uint8_t* buf, char* largeBuf );
+      coap_status_t buffer_to_packet( uint8_t len, uint8_t* buf, char* helperBuf );
       uint8_t packet_to_buffer( uint8_t* buf );
       // get
       uint8_t version_w();

@@ -2,6 +2,7 @@
 // end of wiselib defines
 // CONFIGURATION
 #define CONF_LARGE_BUF_LEN                  128
+#define CONF_HELPER_BUF_LEN                 64
 #define CONF_MAX_RESOURCES                  2
 #define CONF_MAX_RESOURCE_QUERIES           3
 #define CONF_MAX_OBSERVERS                  2

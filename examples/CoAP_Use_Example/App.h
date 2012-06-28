@@ -11,11 +11,10 @@
 class App
 {
    public:
-      void init( Coap* coap, char* data );
-      char* test( uint8_t method, uint8_t* input_data, size_t input_data_len, size_t* outpu_len, queries_t queries );
+      void init( Coap* coap );
+      coap_status_t test( uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_len, queries_t queries );
    private:
        uint8_t ledState;
       Coap* coap_;
-      char* data_;
 };
 #endif

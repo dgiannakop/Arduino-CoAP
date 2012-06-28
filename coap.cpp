@@ -11,8 +11,6 @@ void Coap::init( SoftwareSerial *mySerial, XBeeRadio *xbee, XBeeRadioResponse *r
 {
    my_delegate_t delegate;
    mySerial_ = mySerial;
-   buf_ = buf;
-   largeBuf_ = largeBuf;
 
    broadcasting = true;
    timestamp = millis() + 2000;
@@ -28,11 +26,9 @@ void Coap::init( SoftwareSerial *mySerial, XBeeRadio *xbee, XBeeRadioResponse *r
    rx_  = rx;
 }
 #else
-void Coap::init( XBeeRadio *xbee, XBeeRadioResponse *response, Rx16Response *rx, uint8_t* buf, char* largeBuf )
+void Coap::init( XBeeRadio *xbee, XBeeRadioResponse *response, Rx16Response *rx )
 {
    my_delegate_t delegate;
-   buf_ = buf;
-   largeBuf_ = largeBuf;
 
    broadcasting = true;
    timestamp = millis() + 2000;
@@ -54,8 +50,8 @@ void Coap::handler()
    {
       if ( broadcasting == true )
       {
-         buf_[0] = 0x01;
-         tx_ = Tx16Request( 0xffff, buf_, 1 );
+         helperBuf_[0] = 0x01;
+         tx_ = Tx16Request( 0xffff, helperBuf_, 1 );
          xbee_->send( tx_, 112 );
       }
       coap_notify_from_timer();
@@ -111,15 +107,26 @@ resource_t Coap::resource( uint8_t resource_id )
    return resources_[resource_id];
 }
 
-char* Coap::resource_discovery( uint8_t method, uint8_t* input_data, size_t input_data_len, size_t* output_data_len, queries_t queries )
+coap_status_t Coap::resource_discovery( uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries )
 {
-   if( broadcasting == true )
+   if( method == COAP_GET )
    {
-      broadcasting = false;
+      if( broadcasting == true )
+      {
+         broadcasting = false;
+      }
+      uint8_t rid;
+      String output;// = String("<.well-known/core>;ct=40");
+      for( rid = 0; rid < resources_.size(); rid++ )
+      {
+         // ARDUINO
+         output += "<" + resources_[rid].name() + ">;ct=" + resources_[rid].content_type() + ",";
+      }
+      output.toCharArray( ( char* )output_data, CONF_LARGE_BUF_LEN );
+      output_data[output.length()-1] = '\0';
+      *output_data_len = strlen( ( char* )output_data );
+      return CONTENT;
    }
-   memset( buf_, 0, sizeof( buf_ ) );
-   coap_resource_discovery( output_data_len );
-   return largeBuf_;
 }
 
 void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
@@ -132,14 +139,13 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
    coap_packet_t msg;
    coap_packet_t response;
    uint8_t resource_id = 0;
-   uint8_t query_id = 0;
-   uint8_t *output_data = NULL;
+   uint8_t output_data[CONF_LARGE_BUF_LEN];
    size_t output_data_len = 0;
    msg.init();
    response.init();
 
-   memset( buf_, 0, CONF_MAX_MSG_LEN );
-   coap_error_code = msg.buffer_to_packet( len, buf, largeBuf_ );
+   memset( output_data, 0, CONF_LARGE_BUF_LEN );
+   coap_error_code = msg.buffer_to_packet( len, buf, ( char* )helperBuf_ );
    if ( msg.version_w() != COAP_VERSION )
    {
       coap_error_code = BAD_REQUEST;
@@ -196,11 +202,11 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
                   response.set_type( CON );
                   response.set_mid( coap_new_mid() );
                }
-               response.set_code( call_resource( msg.code_w(), resource_id, msg.payload_w(), msg.payload_len_w(), output_data, &output_data_len, msg.uri_queries_w() ) );
+               response.set_code( resources_[resource_id].execute( msg.code_w(), msg.payload_w(), msg.payload_len_w(), output_data, &output_data_len, msg.uri_queries_w() ) );
                response.set_option( CONTENT_TYPE );
                response.set_content_type( resources_[resource_id].content_type() );
-               //data = ( uint8_t * ) resources_[resource_id].payload();
-               coap_blockwise_response( &msg, &response, &output_data, &output_data_len );
+
+               coap_blockwise_response( &msg, &response, ( uint8_t** )&output_data, &output_data_len );
                response.set_payload( output_data );
                response.set_payload_len( output_data_len );
 
@@ -279,14 +285,15 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
 
 void Coap::coap_send( coap_packet_t *msg, uint16_t dest )
 {
-   uint8_t data_len = msg->packet_to_buffer( buf_ );
+   memset( sendBuf_, 0, CONF_MAX_MSG_LEN );
+   uint8_t data_len = msg->packet_to_buffer( sendBuf_ );
    if ( ( msg->type_w() == CON ) )
    {
-      coap_register_con_msg( dest, msg->mid_w(), buf_, data_len, 0 );
+      coap_register_con_msg( dest, msg->mid_w(), sendBuf_, data_len, 0 );
    }
-   tx_ = Tx16Request( dest, buf_, data_len );
+   tx_ = Tx16Request( dest, sendBuf_, data_len );
    xbee_->send( tx_, 112 );
-   DBG( debug_msg( buf_, data_len ) );
+   DBG( debug_msg( sendBuf_, data_len ) );
 }
 uint16_t Coap::coap_new_mid()
 {
@@ -304,16 +311,19 @@ bool Coap::find_resource( uint8_t* i, String uri_path )
    }
    return false;
 } // end of find_resource
-
+/*
 coap_status_t Coap::call_resource( uint8_t method, uint8_t id, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries )
 {
-   resources_[id].execute( method, input_data, input_data_len, output_data, output_data_len, queries );
+   return resources_[id].execute( method, input_data, input_data_len, output_data, output_data_len, queries );
+
    if ( output_data == NULL )
    {
       return INTERNAL_SERVER_ERROR;
    }
    return CONTENT;
+
 }
+*/
 void Coap::coap_blockwise_response( coap_packet_t *req, coap_packet_t *resp, uint8_t **data, size_t *data_len )
 {
    if ( req->is_option( BLOCK2 ) )
@@ -448,8 +458,10 @@ void Coap::coap_retransmit_loop( void )
    }
 }
 
+/*
 void Coap::coap_resource_discovery( size_t *payload_len )
 {
+
    uint8_t rid;
    String output;// = String("<.well-known/core>;ct=40");
    for( rid = 0; rid < resources_.size(); rid++ )
@@ -462,6 +474,7 @@ void Coap::coap_resource_discovery( size_t *payload_len )
    *payload_len = strlen( largeBuf_ );
    //DBG(mySerial_->println(data));
 }
+*/
 #ifdef OBSERVING
 uint8_t Coap::coap_add_observer( coap_packet_t *msg, uint16_t *id, uint8_t resource_id )
 {
@@ -545,7 +558,7 @@ void Coap::coap_notify( uint8_t resource_id )
    uint8_t* output_data;
    size_t output_data_len;
    uint8_t i;
-   memset( buf_, 0, CONF_MAX_MSG_LEN );
+   memset( sendBuf_, 0, CONF_MAX_MSG_LEN );
    for( i = 0; i < CONF_MAX_OBSERVERS; i++ )
    {
       if( observe_resource_[i] == resource_id )
@@ -573,11 +586,11 @@ void Coap::coap_notify( uint8_t resource_id )
          }
          notification.set_payload( output_data );
          notification.set_payload_len( output_data_len );
-         notification_size = notification.packet_to_buffer( buf_ );
-         coap_register_con_msg( observe_id_[i], notification.mid_w(), buf_, notification_size, coap_unregister_con_msg( observe_last_mid_[i], 0 ) );
+         notification_size = notification.packet_to_buffer( sendBuf_ );
+         coap_register_con_msg( observe_id_[i], notification.mid_w(), sendBuf_, notification_size, coap_unregister_con_msg( observe_last_mid_[i], 0 ) );
          observe_last_mid_[i] = notification.mid_w();
          // ARDUINO
-         tx_ = Tx16Request( observe_id_[i], buf_, notification_size );
+         tx_ = Tx16Request( observe_id_[i], sendBuf_, notification_size );
          xbee_->send( tx_, 112 );
          observe_timestamp_[i] = millis() + 1000 * resources_[resource_id].notify_time_w();
       }
@@ -597,9 +610,10 @@ void Coap::increase_observe_counter()
 #endif
 String Coap::make_string( char* charArray, size_t charLen )
 {
-   memcpy( largeBuf_, charArray, charLen );
-   largeBuf_[charLen] = '\0';
-   return String( largeBuf_ );
+   memset( helperBuf_, 0, CONF_HELPER_BUF_LEN );
+   memcpy( helperBuf_, charArray, charLen );
+   helperBuf_[charLen] = '\0';
+   return String( ( char* )helperBuf_ );
 }
 void Coap::debug_msg( uint8_t* msg, uint8_t len )
 {

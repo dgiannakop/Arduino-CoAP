@@ -6,13 +6,13 @@
 #include "vector.h"
 #include "packet.h"
 
-typedef fastdelegate::FastDelegate5<uint8_t, uint8_t*, size_t, size_t*, queries_t, char *> my_delegate_t;
+typedef fastdelegate::FastDelegate6<uint8_t, uint8_t*, size_t, uint8_t*, size_t*, queries_t, coap_status_t> my_delegate_t;
 
 class CoapResource
 {
    public:
       CoapResource( String name, uint8_t methods, my_delegate_t delegate, bool fast_resource, uint16_t notify_time, uint8_t content_type );
-      void execute( uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries );
+      coap_status_t execute( uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries );
       void set_notify_time( uint16_t notify_time );
       void set_interrupt_flag( bool flag );
       bool is_set();

@@ -33,8 +33,8 @@ Coap coap;
 // your app
 App testApp;
 // resource buffer
-uint8_t buf[CONF_MAX_PAYLOAD_LEN];
-char largeBuf[CONF_LARGE_BUF_LEN];
+//uint8_t buf[CONF_MAX_PAYLOAD_LEN];
+//char largeBuf[CONF_LARGE_BUF_LEN];
 //Create the XbeeRadio object we'll be using
 XBeeRadio xbee = XBeeRadio();
 // create a reusable response object for responses we expect to handle
@@ -64,8 +64,8 @@ void setup()
     testApp.init( resources, 1, largeBuf );
     mySerial.println("INIT DONE");
   #else
-    coap.init( &xbee, &response, &rx, buf, largeBuf );
-    testApp.init( &coap, largeBuf );
+    coap.init( &xbee, &response, &rx );
+    testApp.init( &coap );
   #endif
   // resource id 0 is reserved for built in resource-discovery
   // init test resource, with resource id 1
