@@ -11,6 +11,7 @@ typedef fastdelegate::FastDelegate6<uint8_t, uint8_t*, size_t, uint8_t*, size_t*
 class CoapResource
 {
    public:
+      CoapResource(){};
       CoapResource( String name, uint8_t methods, my_delegate_t delegate, bool fast_resource, uint16_t notify_time, uint8_t content_type );
       coap_status_t execute( uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries );
       void set_notify_time( uint16_t notify_time );

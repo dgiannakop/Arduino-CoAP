@@ -48,15 +48,23 @@ void Coap::handler()
 {
    if ( timestamp <= millis() - 60 )
    {
+      //digitalWrite( 12, LOW );
+      digitalWrite( 12, HIGH );
+      timestamp = millis() + 1000;
       if ( broadcasting == true )
       {
+         delay(200);
          helperBuf_[0] = 0x01;
          tx_ = Tx16Request( 0xffff, helperBuf_, 1 );
          xbee_->send( tx_, 112 );
       }
+      else
+      {
+         delay(50);
+      }
+      digitalWrite( 12, LOW );
       coap_notify_from_timer();
-      coap_retransmit_loop();
-      timestamp = millis() + 1000;
+      //coap_retransmit_loop();
    }
    if( xbee_->checkForData( 112 ) )
    {
@@ -78,7 +86,7 @@ void Coap::handler()
 void Coap::add_resource( String name, uint8_t methods, my_delegate_t callback, bool fast_resource, uint16_t notify_time, uint8_t content_type )
 {
    // remove if this resource is already stored (if we need to update)
-   remove_resource( name );
+   //remove_resource( name );
    // create new resource object
    resource_t new_resource( name, methods, callback, fast_resource, notify_time, content_type );
    // push it to the vector
@@ -301,7 +309,7 @@ uint16_t Coap::coap_new_mid()
 }
 bool Coap::find_resource( uint8_t* i, String uri_path )
 {
-   for ( ( *i ) = 0; ( *i ) < CONF_MAX_RESOURCES; ( *i )++ )
+   for ( ( *i ) = 0; ( *i ) < resources_.size(); ( *i )++ )
    {
       //DBG(mySerial_->println(resources_[*i].name()));
       if ( uri_path == resources_[*i].name() )
@@ -555,7 +563,7 @@ void Coap::coap_notify( uint8_t resource_id )
 {
    coap_packet_t notification;
    uint8_t notification_size;
-   uint8_t* output_data;
+   uint8_t output_data[CONF_LARGE_BUF_LEN];
    size_t output_data_len;
    uint8_t i;
    memset( sendBuf_, 0, CONF_MAX_MSG_LEN );
@@ -568,14 +576,14 @@ void Coap::coap_notify( uint8_t resource_id )
          notification.set_type( CON );
          notification.set_mid( coap_new_mid() );
 
-         resources_[resource_id].execute( COAP_GET, NULL, 0, output_data, &output_data_len, notification.uri_queries_w() );
-         if( output_data == NULL )
-         {
-            notification.set_code( INTERNAL_SERVER_ERROR );
-         }
-         else
-         {
-            notification.set_code( CONTENT );
+
+         //if( output_data == NULL )
+         //{
+         //notification.set_code( INTERNAL_SERVER_ERROR );
+         //}
+         //else
+         //{
+            notification.set_code( resources_[resource_id].execute( COAP_GET, NULL, 0, output_data, &output_data_len, notification.uri_queries_w() ) );
             notification.set_option( CONTENT_TYPE );
             notification.set_content_type( resources_[resource_id].content_type() );
             notification.set_option( TOKEN );
@@ -583,7 +591,7 @@ void Coap::coap_notify( uint8_t resource_id )
             notification.set_token( observe_token_[i] );
             notification.set_option( OBSERVE );
             notification.set_observe( observe_counter() );
-         }
+         //}
          notification.set_payload( output_data );
          notification.set_payload_len( output_data_len );
          notification_size = notification.packet_to_buffer( sendBuf_ );

@@ -6,12 +6,12 @@ template<typename Data>
 class Vector {
       size_t d_size; // Stores no. of actually stored objects
       size_t d_capacity; // Stores allocated capacity
-      Data *d_data; // Stores data
+      Data d_data[10]; // Stores data
    public:
       Vector() :
          d_size( 0 ),
-         d_capacity( 0 ),
-         d_data( 0 )
+         d_capacity( 10 )
+         //d_data( 0 )
       {}; // Default constructor
       Vector( Vector const &other ) :
          d_size( other.d_size ),
@@ -38,10 +38,9 @@ class Vector {
       }; // Needed for memory management
 
       void push_back( Data const &x ) {
-         if ( d_capacity == d_size )
-            resize();
+         //if ( d_capacity == d_size )
+            //resize();
          d_data[d_size++] = x;
-
       }; // Adds new value. If needed, allocates more space
 
       void remove( int idx ) {
