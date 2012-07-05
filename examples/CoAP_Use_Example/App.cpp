@@ -47,7 +47,7 @@ coap_status_t App::test( uint8_t method, uint8_t* input_data, size_t input_data_
   {
     setLamp( 0, *input_data - 0x30 );
     *output_data_len = sprintf( (char*)output_data, "%d", lampStatuses[0] );
-    return CHANGED
+    return CHANGED;
   }
 }
 coap_status_t App::test2( uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries)
