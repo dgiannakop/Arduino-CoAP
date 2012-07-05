@@ -12,8 +12,8 @@
  * Upon receiving a packet, we send it back to the sender.
  *
  */
- 
- 
+
+
 //Include Libraries
 #include <XBee.h>
 #include <XbeeRadio.h>
@@ -22,8 +22,8 @@
 #include "App.h"
 
 #ifdef DEBUG
-  // software serial port
-  SoftwareSerial mySerial(2, 3);
+// software serial port
+SoftwareSerial mySerial(2, 3);
 #endif
 
 // coap object
@@ -45,9 +45,19 @@ Rx16Response rx = Rx16Response();
 //Runs only once
 void setup()
 {
-  pinMode(10, OUTPUT);
-  pinMode(9, OUTPUT);
-  digitalWrite( 9, LOW );
+  //pinMode(10, OUTPUT);
+  pinMode(12, OUTPUT);
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
+  digitalWrite( 12, LOW );
+  digitalWrite( 2, HIGH);
+  digitalWrite( 3, LOW );
+  digitalWrite( 4, LOW );
+  digitalWrite( 5, LOW );
+  digitalWrite( 6, LOW );
   // comment out for debuging
   xbee.initialize_xbee_module();
   //start our XbeeRadio object and set our baudrate to 38400.
@@ -57,16 +67,17 @@ void setup()
   // set coap object for callback functions
   //Wrapper::setObj(coap);
   // init coap service 
-  #ifdef DEBUG
-    mySerial.begin(9600);
-    mySerial.println("INIT...");
-    coap.init( &timer, &mySerial, &xbee, &response, &rx, resources, buf, largeBuf );
-    testApp.init( resources, 1, largeBuf );
-    mySerial.println("INIT DONE");
-  #else
-    coap.init( &xbee, &response, &rx );
-    testApp.init( &coap );
-  #endif
+#ifdef DEBUG
+  mySerial.begin(9600);
+  mySerial.println("INIT...");
+  coap.init( &timer, &mySerial, &xbee, &response, &rx, resources, buf, largeBuf );
+  testApp.init( resources, 1, largeBuf );
+  mySerial.println("INIT DONE");
+#else
+  coap.init( &xbee, &response, &rx );
+  testApp.init( &coap );
+#endif
+  digitalWrite( 12, HIGH );
   // resource id 0 is reserved for built in resource-discovery
   // init test resource, with resource id 1
   // inside init you must register a callback function
@@ -78,3 +89,4 @@ void loop()
   // if there is a request for your resource, your callback function will be triggered
   coap.handler();
 }
+
