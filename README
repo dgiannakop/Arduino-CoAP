@@ -13,7 +13,9 @@ Communication based on XbeeRadio https://github.com/mksense/mac/tree/master/xbee
    - uri queries are now closer to the standar and allow multiple queries per request
    - apps are now easier to use coap library, with less code needed
 
-* Not tested, may be completely broken at the moment
+* Not fully tested
+   - blockwise responses are not working correctly
+   - uri queries are not tested
 
 * Current TODO list:
    - Make retransmit and observe arrays of vector type
