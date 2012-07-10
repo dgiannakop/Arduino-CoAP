@@ -48,41 +48,37 @@ void Coap::handler()
 {
    if ( timestamp <= millis() - 60 )
    {
-      //digitalWrite( 12, LOW );
+      // for testing
       digitalWrite( 12, HIGH );
+      // broadcast every 1000ms
       timestamp = millis() + 1000;
+      // if broadcasting is set, send the broadcast message (not a CoAP feature)
       if ( broadcasting == true )
       {
-         delay(200);
+         delay( 200 );
          helperBuf_[0] = 0x01;
          tx_ = Tx16Request( 0xffff, helperBuf_, 1 );
          xbee_->send( tx_, 112 );
       }
       else
       {
-         delay(50);
+         delay( 50 );
       }
       digitalWrite( 12, LOW );
+      // notify observers
       coap_notify_from_timer();
-      //coap_retransmit_loop();
+      // retransmit if needed
+      coap_retransmit_loop();
    }
    if( xbee_->checkForData( 112 ) )
    {
-      //broadcasting = false;
-      // blink, just for debug
-      //digitalWrite( 10, HIGH ); // set the LED on
-      //delay( 50 );
-      //digitalWrite( 10, LOW );  // set the LED off
       //get our response and save it on our response variable
       xbee_->getResponse().getRx16Response( *rx_ );
       //call the receiver
-      //tx_ = Tx16Request( 0xffff, xbee_->getResponse().getData(), xbee_->getResponse().getDataLength());
-      //xbee_->send( tx_, 112);
       receiver( xbee_->getResponse().getData(), rx_->getRemoteAddress16(), xbee_->getResponse().getDataLength() );
    }
 
 }
-
 void Coap::add_resource( String name, uint8_t methods, my_delegate_t callback, bool fast_resource, uint16_t notify_time, uint8_t content_type )
 {
    // remove if this resource is already stored (if we need to update)
@@ -112,17 +108,21 @@ void Coap::remove_resource( String name )
 
 resource_t Coap::resource( uint8_t resource_id )
 {
+   // return the resource object
    return resources_[resource_id];
 }
 
 coap_status_t Coap::resource_discovery( uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries )
 {
+   // resource discovery function (respond to .well-known/core
    if( method == COAP_GET )
    {
+      // the first time the device gets a request for this, disables broadcasting (not a CoAP feature)
       if( broadcasting == true )
       {
          broadcasting = false;
       }
+      // build the response string
       uint8_t rid;
       String output;// = String("<.well-known/core>;ct=40");
       for( rid = 0; rid < resources_.size(); rid++ )
@@ -130,15 +130,20 @@ coap_status_t Coap::resource_discovery( uint8_t method, uint8_t* input_data, siz
          // ARDUINO
          output += "<" + resources_[rid].name() + ">;ct=" + resources_[rid].content_type() + ",";
       }
+      // print it to char array
       output.toCharArray( ( char* )output_data, CONF_LARGE_BUF_LEN );
+      // delete the last char ","
       output_data[output.length()-1] = '\0';
+      // set output data len
       *output_data_len = strlen( ( char* )output_data );
+      // return status
       return CONTENT;
    }
 }
 
 void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
 {
+   // used to identify if this packet is a CoAP packet (not a CoAP feature)
    if ( buf[0] != WISELIB_MID_COAP )
    {
       return;
@@ -153,6 +158,7 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
    response.init();
 
    memset( output_data, 0, CONF_LARGE_BUF_LEN );
+   // parse the message
    coap_error_code = msg.buffer_to_packet( len, buf, ( char* )helperBuf_ );
    if ( msg.version_w() != COAP_VERSION )
    {
@@ -160,14 +166,14 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
    }
    if ( coap_error_code == NO_ERROR )
    {
+      // if URI_HOST is set and the HOST doesn't much this host, reject the message
       if ( ( msg.is_option( URI_HOST ) ) && ( msg.uri_host_w() != xbee_->myAddress ) )
       {
-         return; // if uri host option is set, and id doesn't match
+         return;
       }
+      //empty msg, ack, or rst
       if ( msg.code_w() == 0 )
       {
-         //DBG(mySerial_->println("REC::EMPTY"));
-         //empty msg, ack, or rst
          coap_unregister_con_msg( msg.mid_w(), 0 );
 #ifdef OBSERVING
          if ( msg.type_w() == RST )
@@ -177,7 +183,7 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
 #endif
          return; // nothing else to do
       }
-      // messgae not empty, might need to respond
+      // message is a request
       if ( msg.code_w() <= 4 ) // 1-4
       {
          switch ( msg.type_w() )
@@ -191,34 +197,43 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
                response.set_mid( msg.mid_w() );
                break;
             default:
-               // ACK or RST on a get request. Not a valid coap message, ignore
+               // ACK or RST on a request. Not a valid coap message, ignore
                return;
          }
          //DBG(mySerial_->println("REC::REQUEST"));
          //DBG(mySerial_->println(make_string(msg.uri_path_w(), msg.uri_path_len_w())));
+
+         // find the requested resource
          if ( find_resource( &resource_id, make_string( msg.uri_path_w(), msg.uri_path_len_w() ) ) == true )
          {
             //DBG(mySerial_->println("REC::RESOURCE FOUND"));
+            // check if the requested method is allowed on this resource
             if ( resources_[resource_id].method_allowed( msg.code_w() ) )
             {
                //DBG(mySerial_->println("REC::METHOD_ALLOWED"));
+               // in case of slow reply send the ACK if this is needed
                if ( resources_[resource_id].fast_resource() == false && response.type_w() == ACK )
                {
-                  // in case of slow reply send the ACK
+                  // send the ACK
                   coap_send( &response, from );
+                  // init the response again
                   response.init();
                   response.set_type( CON );
                   response.set_mid( coap_new_mid() );
                }
+               // execute the resource and set the status to the response object
                response.set_code( resources_[resource_id].execute( msg.code_w(), msg.payload_w(), msg.payload_len_w(), output_data, &output_data_len, msg.uri_queries_w() ) );
+               // set the content type
                response.set_option( CONTENT_TYPE );
                response.set_content_type( resources_[resource_id].content_type() );
-
+               // check for blockwise response
                coap_blockwise_response( &msg, &response, ( uint8_t** )&output_data, &output_data_len );
+               // set the payload and length
                response.set_payload( output_data );
                response.set_payload_len( output_data_len );
 
 #ifdef OBSERVING
+               // if it is set, register the observer
                if ( msg.code_w() == COAP_GET && msg.is_option( OBSERVE ) && resources_[resource_id].notify_time_w() > 0 && msg.is_option( TOKEN ) )
                {
                   if ( coap_add_observer( &msg, &from, resource_id ) == 1 )
@@ -240,6 +255,7 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
             //DBG(mySerial_->println("REC::NOT_FOUND"));
             response.set_code( NOT_FOUND );
          }
+         // if the request has a token, add it to the response
          if ( msg.is_option( TOKEN ) )
          {
             //DBG(mySerial_->println("REC::IS_SET_TOKEN"));
@@ -247,10 +263,12 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
             response.set_token_len( msg.token_len_w() );
             response.set_token( msg.token_w() );
          }
+         // send the reposnse
          coap_send( &response, from );
          //DBG(mySerial_->println("ACTION: Sent reply"));
          return;
       } // end of handle request
+      // handle response
       if ( msg.code_w() >= 64 && msg.code_w() <= 191 )
       {
          //DBG(mySerial_->println("REC::RESPONSE"));
@@ -318,20 +336,8 @@ bool Coap::find_resource( uint8_t* i, String uri_path )
       }
    }
    return false;
-} // end of find_resource
-/*
-coap_status_t Coap::call_resource( uint8_t method, uint8_t id, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries )
-{
-   return resources_[id].execute( method, input_data, input_data_len, output_data, output_data_len, queries );
-
-   if ( output_data == NULL )
-   {
-      return INTERNAL_SERVER_ERROR;
-   }
-   return CONTENT;
-
 }
-*/
+
 void Coap::coap_blockwise_response( coap_packet_t *req, coap_packet_t *resp, uint8_t **data, size_t *data_len )
 {
    if ( req->is_option( BLOCK2 ) )
@@ -466,23 +472,6 @@ void Coap::coap_retransmit_loop( void )
    }
 }
 
-/*
-void Coap::coap_resource_discovery( size_t *payload_len )
-{
-
-   uint8_t rid;
-   String output;// = String("<.well-known/core>;ct=40");
-   for( rid = 0; rid < resources_.size(); rid++ )
-   {
-      // ARDUINO
-      output += "<" + resources_[rid].name() + ">;ct=" + resources_[rid].content_type() + ",";
-   }
-   output.toCharArray( largeBuf_, CONF_LARGE_BUF_LEN );
-   largeBuf_[output.length()-1] = '\0';
-   *payload_len = strlen( largeBuf_ );
-   //DBG(mySerial_->println(data));
-}
-*/
 #ifdef OBSERVING
 uint8_t Coap::coap_add_observer( coap_packet_t *msg, uint16_t *id, uint8_t resource_id )
 {
@@ -576,22 +565,15 @@ void Coap::coap_notify( uint8_t resource_id )
          notification.set_type( CON );
          notification.set_mid( coap_new_mid() );
 
+         notification.set_code( resources_[resource_id].execute( COAP_GET, NULL, 0, output_data, &output_data_len, notification.uri_queries_w() ) );
+         notification.set_option( CONTENT_TYPE );
+         notification.set_content_type( resources_[resource_id].content_type() );
+         notification.set_option( TOKEN );
+         notification.set_token_len( observe_token_len_[i] );
+         notification.set_token( observe_token_[i] );
+         notification.set_option( OBSERVE );
+         notification.set_observe( observe_counter() );
 
-         //if( output_data == NULL )
-         //{
-         //notification.set_code( INTERNAL_SERVER_ERROR );
-         //}
-         //else
-         //{
-            notification.set_code( resources_[resource_id].execute( COAP_GET, NULL, 0, output_data, &output_data_len, notification.uri_queries_w() ) );
-            notification.set_option( CONTENT_TYPE );
-            notification.set_content_type( resources_[resource_id].content_type() );
-            notification.set_option( TOKEN );
-            notification.set_token_len( observe_token_len_[i] );
-            notification.set_token( observe_token_[i] );
-            notification.set_option( OBSERVE );
-            notification.set_observe( observe_counter() );
-         //}
          notification.set_payload( output_data );
          notification.set_payload_len( output_data_len );
          notification_size = notification.packet_to_buffer( sendBuf_ );

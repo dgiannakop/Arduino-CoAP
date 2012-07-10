@@ -10,7 +10,7 @@ typedef struct query_t
    String name;
    String value;
 };
-typedef int queries_t;
+typedef query_t queries_t;
 
 typedef enum
 {
