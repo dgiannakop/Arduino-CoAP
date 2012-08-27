@@ -1,24 +1,2 @@
-Basic CoAP library for arduino.
-Communication based on XbeeRadio https://github.com/mksense/mac/tree/master/xbee/arduino
-
-***************************
-* Master branch is working
-
-* In this branch many things have changed:
-   - resource class revamped
-   - resources are now internal to coap object using vector type
-   - but they can be added / updated / deleted externally
-   - buffers are also internal, causing changes to many functions
-   - callback function prototypes and usage
-   - uri queries are now closer to the standar and allow multiple queries per request
-   - apps are now easier to use coap library, with less code needed
-
-* Not fully tested
-   - blockwise responses are not working correctly
-   - uri queries are not tested
-
-* Current TODO list:
-   - Make retransmit and observe arrays of vector type
-   - Reduce code size
-   - Implement random factor for retransmit interval
-***************************
+CoAP for Arduino over Ethernet.
+Code is still in alpha.
