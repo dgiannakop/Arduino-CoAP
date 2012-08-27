@@ -7,7 +7,8 @@
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 #include <coap.h>
-#include "App.h"
+#include <RelaySens.h>
+#include "PowerStrip.h"
 
 #ifdef DEBUG
 // software serial port
@@ -15,7 +16,7 @@ SoftwareSerial mySerial(2, 3);
 #endif
 
 Coap coap;
-App testApp;
+PowerStrip powerstrip;
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 IPAddress ip(150, 140, 5, 120);
@@ -40,7 +41,7 @@ void setup()
 	mySerial.println("INIT DONE");
 #else
 	coap.init(&Ethernet, &EthUDP);
-	testApp.init(&coap);
+	powerstrip.init(&coap);
 #endif
 	digitalWrite(9, HIGH);
 	// resource id 0 is reserved for built in resource-discovery

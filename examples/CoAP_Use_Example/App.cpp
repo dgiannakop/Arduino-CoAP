@@ -22,8 +22,8 @@ void App::init(Coap *coap)
 	// first we create a delegate for our callback function
 	delegate = fastdelegate::MakeDelegate(this, &App::test);
 	coap->add_resource("lamps", GET | PUT, delegate, true, 20, TEXT_PLAIN);
-	//delegate2 = fastdelegate::MakeDelegate( this, &App::test2 );
-	//coap->add_resource("temp1", GET | PUT, delegate2, true, 30, APPLICATION_XML);
+	delegate2 = fastdelegate::MakeDelegate( this, &App::test2 );
+	coap->add_resource("temp1", GET | PUT, delegate2, true, 30, APPLICATION_XML);
 	//delegate3 = fastdelegate::MakeDelegate( this, &App::test3 );
 	//coap->add_resource("msg", PUT, delegate3, true, 60, TEXT_PLAIN);
 }
@@ -34,7 +34,9 @@ void App::setLamp(int lamp, int value)
 	digitalWrite(lampPins[lamp], lampStatuses[lamp]);
 }
 
-coap_status_t App::test(uint8_t method, uint8_t *input_data, size_t input_data_len, uint8_t *output_data, size_t *output_data_len, queries_t queries)
+
+coap_status_t App::test(uint8_t method, uint8_t *input_data, size_t input_data_len,
+						uint8_t *output_data, size_t *output_data_len, queries_t queries)
 {
 	//*output_data_len = sprintf( (char*)output_data, "working" );
 	//uint8_t* input = resources_[rid].input_data_w();
@@ -47,36 +49,41 @@ coap_status_t App::test(uint8_t method, uint8_t *input_data, size_t input_data_l
 		return CHANGED;
 	}
 }
-coap_status_t App::test2(uint8_t method, uint8_t *input_data, size_t input_data_len, uint8_t *output_data, size_t *output_data_len, queries_t queries)
+
+
+coap_status_t App::test2(uint8_t method, uint8_t *input_data, size_t input_data_len,
+						 uint8_t *output_data, size_t *output_data_len, queries_t queries)
 {
 	*output_data_len = sprintf((char *)output_data, "working2");
 	/*
-	  char char_buffer[query_value.length()];
-	 query_value.toCharArray(char_buffer, query_value.length());
-	 int i = int(char_buffer);
-	 coap_->update_resource("test", GET | PUT, true, i, TEXT_PLAIN);
-	 //resources_[rid].set_payload_len( sprintf( data_, "working" ) );
-	 */
+	char char_buffer[query_value.length()];
+	query_value.toCharArray(char_buffer, query_value.length());
+	int i = int(char_buffer);
+	coap_->update_resource("test", GET | PUT, true, i, TEXT_PLAIN);
+	//resources_[rid].set_payload_len( sprintf( data_, "working" ) );
+	*/
 	return CONTENT;
 }
-coap_status_t App::test3(uint8_t method, uint8_t *input_data, size_t input_data_len, uint8_t *output_data, size_t *output_data_len, queries_t queries)
+
+
+coap_status_t App::test3(uint8_t method, uint8_t *input_data, size_t input_data_len,
+						 uint8_t *output_data, size_t *output_data_len, queries_t queries)
 {
 	/*
 	int i;
-	 for(i=0; i<input_data_len; i++);
-	 {
-	 output_data[i] = input_data[i];
-	 }
-	 *output_data_len = input_data_len;
-	 */
+	for(i=0; i<input_data_len; i++); {
+		output_data[i] = input_data[i];
+	}
+	*output_data_len = input_data_len;
+	*/
 	*output_data_len = sprintf((char *)output_data, "%d", input_data_len);
 	/*
-	  char char_buffer[query_value.length()];
-	 query_value.toCharArray(char_buffer, query_value.length());
-	 int i = int(char_buffer);
-	 coap_->update_resource("test", GET | PUT, true, i, TEXT_PLAIN);
-	 //resources_[rid].set_payload_len( sprintf( data_, "working" ) );
-	 */
+	char char_buffer[query_value.length()];
+	query_value.toCharArray(char_buffer, query_value.length());
+	int i = int(char_buffer);
+	coap_->update_resource("test", GET | PUT, true, i, TEXT_PLAIN);
+	//resources_[rid].set_payload_len( sprintf( data_, "working" ) );
+	*/
 	return CONTENT;
 }
 

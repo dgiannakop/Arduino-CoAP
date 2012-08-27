@@ -1,5 +1,6 @@
 #include "resource.h"
-CoapResource::CoapResource(String name, uint8_t methods, my_delegate_t delegate, bool fast_resource, uint16_t notify_time, uint8_t content_type)
+CoapResource::CoapResource(String name, uint8_t methods, my_delegate_t delegate,
+						   bool fast_resource, uint16_t notify_time, uint8_t content_type)
 {
 	name_ = name;
 	methods_ = methods;
@@ -11,7 +12,8 @@ CoapResource::CoapResource(String name, uint8_t methods, my_delegate_t delegate,
 	interrupt_flag_ = false;
 }
 
-coap_status_t CoapResource::execute(uint8_t method, uint8_t *input_data, size_t input_data_len, uint8_t *output_data, size_t *output_data_len, queries_t queries)
+coap_status_t CoapResource::execute(uint8_t method, uint8_t *input_data, size_t input_data_len,
+									uint8_t *output_data, size_t *output_data_len, queries_t queries)
 {
 	if(del_) {
 		if(method == 3)

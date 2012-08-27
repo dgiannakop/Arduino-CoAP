@@ -7,28 +7,12 @@
 #endif
 
 #ifdef DEBUG
-void Coap::init(SoftwareSerial *mySerial, EthernetCoap *ethcoap, uint8_t *buf, char *largeBuf)
+void Coap::init(SoftwareSerial *mySerial, EthernetClass *ethernet, EthernetCoap *ethcoap, uint8_t *buf, char *largeBuf)
 {
 	my_delegate_t delegate;
 	mySerial_ = mySerial;
 
-	broadcasting = true;
-	timestamp = millis() + 2000;
-	mid_ = random(65536 / 2);
-	observe_counter_ = 1;
-	//register built-in resource discovery resource
-	delegate = fastdelegate::MakeDelegate(this, &Coap::resource_discovery);
-	resource_t discovery(".well-known/core", GET, delegate, true, 0, APPLICATION_LINK_FORMAT);
-	resources_.push_back(discovery);
-
-	ethcoap_ = ethcoap;
-}
-#else
-void Coap::init(EthernetClass* ethernet, EthernetCoap* ethcoap)
-{
-	my_delegate_t delegate;
-
-	broadcasting = true;
+// 	broadcasting = true;
 	timestamp = millis() + 2000;
 	mid_ = random(65536 / 2);
 	observe_counter_ = 1;
@@ -38,7 +22,24 @@ void Coap::init(EthernetClass* ethernet, EthernetCoap* ethcoap)
 	resources_.push_back(discovery);
 
 	_ethernet = ethernet;
-	_ethcoap = ethcoap;
+	_ethudp = ethudp;
+}
+#else
+void Coap::init(EthernetClass* ethernet, EthernetUDP* ethudp)
+{
+	my_delegate_t delegate;
+
+// 	broadcasting = true;
+	timestamp = millis() + 2000;
+	mid_ = random(65536 / 2);
+	observe_counter_ = 1;
+	//register built-in resource discovery resource
+	delegate = fastdelegate::MakeDelegate(this, &Coap::resource_discovery);
+	resource_t discovery(".well-known/core", GET, delegate, true, 0, APPLICATION_LINK_FORMAT);
+	resources_.push_back(discovery);
+
+	_ethernet = ethernet;
+	_ethudp = ethudp;
 }
 #endif
 
@@ -47,35 +48,35 @@ void Coap::handler()
 {
 	if(timestamp <= millis() - 60) {
 		// for testing
-		digitalWrite(12, HIGH);
+		digitalWrite(9, HIGH);
 		// broadcast every 1000ms
 		timestamp = millis() + 1000;
-		// if broadcasting is set, send the broadcast message (not a CoAP feature)
-		if(broadcasting == true) {
-			delay(200);
-			helperBuf_[0] = 0x01;
-			//tx_ = Tx16Request(0xffff, helperBuf_, 1);
-			//xbee_->send(tx_, 112);
-			_ethcoap->beginPacket(_ethcoap->getBroadCast(), 5683);
-			_ethcoap->write(helperBuf_, CONF_HELPER_BUF_LEN);
-			_ethcoap->endPacket();
-		} else {
+		// If broadcasting is set, send the broadcast message (not a CoAP feature)
+// 		if(broadcasting == true) {
+// 			delay(200);
+// 			helperBuf_[0] = 0x01;
+// 			//tx_ = Tx16Request(0xffff, helperBuf_, 1);
+// 			//xbee_->send(tx_, 112);
+// 			_ethudp->beginPacket(_ethudp->getBroadCast(), 5683);
+// 			_ethudp->write(helperBuf_, CONF_HELPER_BUF_LEN);
+// 			_ethudp->endPacket();
+// 		} else {
 			delay(50);
-		}
-		digitalWrite(12, LOW);
+// 		}
+		digitalWrite(9, LOW);
 		// notify observers
 		coap_notify_from_timer();
 		// retransmit if needed
 		coap_retransmit_loop();
 	}
 	//if(xbee_->checkForData(112)) {
-	int packet_len = _ethcoap->parsePacket();
+	int packet_len = _ethudp->parsePacket();
 	if(packet_len) {
 		//get our response and save it on our response variable
 		//xbee_->getResponse().getRx16Response(*rx_);
-		_ethcoap->read(_ethcoap->packetBuffer, packet_len);
+		_ethudp->read(_packetBuffer, packet_len);
 		//call the receiver
-		receiver(_ethcoap->packetBuffer, _ethcoap->remoteIP(), packet_len);
+		receiver(_packetBuffer, _ethudp->remoteIP(), packet_len);
 		//receiver(xbee_->getResponse().getData(), rx_->getRemoteAddress16(), xbee_->getResponse().getDataLength());
 	}
 
@@ -105,12 +106,14 @@ void Coap::receiver(uint8_t *buf, IPAddress from, uint8_t len)
 		coap_error_code = BAD_REQUEST;
 	}
 	if(coap_error_code == COAP_NO_ERROR) {
-		// if URI_HOST is set and the HOST doesn't much this host, reject the message
+
+		// If URI_HOST is set and the HOST doesn't much this host, reject the message
 		//FIXME: check what uri_host looks like
 		//if((msg.is_option(URI_HOST)) && (msg.uri_host_w() != _ethernet->localIP())) {
 		//	return;
 		//}
 		//empty msg, ack, or rst
+
 		if(msg.code_w() == 0) {
 			coap_unregister_con_msg(msg.mid_w(), 0);
 			#ifdef OBSERVING
@@ -232,7 +235,8 @@ void Coap::receiver(uint8_t *buf, IPAddress from, uint8_t len)
 } // end of coap receiver
 
 
-void Coap::add_resource(String name, uint8_t methods, my_delegate_t callback, bool fast_resource, uint16_t notify_time, uint8_t content_type)
+void Coap::add_resource(String name, uint8_t methods, my_delegate_t callback,
+						bool fast_resource, uint16_t notify_time, uint8_t content_type)
 {
 	// remove if this resource is already stored (if we need to update)
 	//remove_resource( name );
@@ -267,14 +271,15 @@ resource_t Coap::resource(uint8_t resource_id)
 }
 
 
-coap_status_t Coap::resource_discovery(uint8_t method, uint8_t *input_data, size_t input_data_len, uint8_t *output_data, size_t *output_data_len, queries_t queries)
+coap_status_t Coap::resource_discovery(uint8_t method, uint8_t *input_data, size_t input_data_len,
+									   uint8_t *output_data, size_t *output_data_len, queries_t queries)
 {
 	// resource discovery function (respond to .well-known/core
 	if(method == COAP_GET) {
 		// the first time the device gets a request for this, disables broadcasting (not a CoAP feature)
-		if(broadcasting == true) {
-			broadcasting = false;
-		}
+// 		if(broadcasting == true) {
+// 			broadcasting = false;
+// 		}
 		// build the response string
 		uint8_t rid;
 		String output;// = String("<.well-known/core>;ct=40");
@@ -301,9 +306,9 @@ void Coap::coap_send(coap_packet_t *msg, IPAddress dest)
 	if((msg->type_w() == CON)) {
 		coap_register_con_msg(dest, msg->mid_w(), sendBuf_, data_len, 0);
 	}
-	_ethcoap->beginPacket(dest, _ethcoap->remotePort());
-	_ethcoap->write(sendBuf_, data_len);
-	_ethcoap->endPacket();
+	_ethudp->beginPacket(dest, _ethudp->remotePort());
+	_ethudp->write(sendBuf_, data_len);
+	_ethudp->endPacket();
 	//tx_ = Tx16Request(dest, sendBuf_, data_len);
 	//xbee_->send(tx_, 112);
 	DBG(debug_msg(sendBuf_, data_len));
@@ -366,16 +371,16 @@ void Coap::coap_register_con_msg(uint16_t id, uint16_t mid, uint8_t *buf, uint8_
 	DBG(mySerial_->println("Registered con msg "));
 	uint8_t i = 0;
 	while(i < CONF_MAX_RETRANSMIT_SLOTS) {
-		if(retransmit_mid_[i] == 0) {
-			retransmit_register_[i] = 1;
-			retransmit_id_[i] = id;
-			retransmit_mid_[i] = mid;
-			retransmit_timeout_and_tries_[i] = (CONF_COAP_RESPONSE_TIMEOUT << 4) | tries;
-			retransmit_size_[i] = size;
-			memcpy(retransmit_packet_[i], buf, size);
+		if(_retransmit[i].mid == 0) {
+			_retransmit[i].reg = 1;
+			_retransmit[i].id = id;
+			_retransmit[i].mid = mid;
+			_retransmit[i].timeout_and_tries = (CONF_COAP_RESPONSE_TIMEOUT << 4) | tries;
+			_retransmit[i].size = size;
+			memcpy(_retransmit[i].packet, buf, size);
 			// ARDUINO
-			timeout_ = 1000 * (retransmit_timeout_and_tries_[i] >> 4);
-			retransmit_timestamp_[i] = millis() + timeout_;
+			timeout_ = 1000 * (_retransmit[i].timeout_and_tries >> 4);
+			_retransmit[i].timestamp = millis() + timeout_;
 			return;
 		}
 		i++;
@@ -388,18 +393,18 @@ uint8_t Coap::coap_unregister_con_msg(uint16_t mid, uint8_t flag)
 	DBG(mySerial_->println("Unregistered con msg"));
 	uint8_t i = 0;
 	while(i < CONF_MAX_RETRANSMIT_SLOTS) {
-		if(retransmit_mid_[i] == mid) {
+		if(_retransmit[i].mid == mid) {
 			if(flag == 1) {
-				retransmit_register_[i] = 0;
-				retransmit_id_[i] = 0x0000;
-				retransmit_mid_[i] = 0x0000;
-				memset(retransmit_packet_[i], 0, retransmit_size_[i]);
-				retransmit_size_[i] = 0x00;
-				retransmit_timeout_and_tries_[i] = 0x00;
+				_retransmit[i].reg = 0;
+				_retransmit[i].id = 0x0000;
+				_retransmit[i].mid = 0x0000;
+				memset(_retransmit[i].packet, 0, _retransmit[i].size);
+				_retransmit[i].size = 0x00;
+				_retransmit[i].timeout_and_tries = 0x00;
 				return 0;
 			} else {
-				retransmit_register_[i] = 0;
-				return 0x0F & retransmit_timeout_and_tries_[i];
+				_retransmit[i].reg = 0;
+				return 0x0F & _retransmit[i].timeout_and_tries;
 			}
 		}
 		i++;
@@ -410,34 +415,34 @@ uint8_t Coap::coap_unregister_con_msg(uint16_t mid, uint8_t flag)
 
 void Coap::coap_retransmit_loop(void)
 {
-	//DBG(mySerial_->println("Retransmit loop"));
+	//DBG(mySerial_->println("_retransmit loop"));
 	uint8_t i;
 	uint8_t timeout_factor = 0x01;
 	for(i = 0; i < CONF_MAX_RETRANSMIT_SLOTS; i++) {
-		//DBG(mySerial_->println(retransmit_register_[i]));
-		if(retransmit_register_[i] == 1) {
+		//DBG(mySerial_->println(_retransmit_register_[i]));
+		if(_retransmit[i].reg == 1) {
 			// -60 is used because there is always a fault in time
-			if(retransmit_timestamp_[i] <= millis() - 60) {
-				retransmit_timeout_and_tries_[i] += 1;
-				timeout_factor = timeout_factor << (0x0F & retransmit_timeout_and_tries_[i]);
+			if(_retransmit[i].timestamp <= millis() - 60) {
+				_retransmit[i].timeout_and_tries += 1;
+				timeout_factor = timeout_factor << (0x0F & _retransmit[i].timeout_and_tries);
 				// ARDUINO
-				DBG(mySerial_->println("RETRANSMIT"));
-				_ethcoap->beginPacket(_ethcoap->remoteIP(), _ethcoap->remotePort());
-				_ethcoap->write(retransmit_packet_[i], retransmit_size_[i]);
-				_ethcoap->endPacket();
-				//tx_ = Tx16Request(retransmit_id_[i], retransmit_packet_[i], retransmit_size_[i]);
+				DBG(mySerial_->println("_retransmit"));
+				_ethudp->beginPacket(_ethudp->remoteIP(), _ethudp->remotePort());
+				_ethudp->write(_retransmit[i].packet, _retransmit[i].size);
+				_ethudp->endPacket();
+				//tx_ = Tx16Request(_retransmit_id_[i], _retransmit_packet_[i], _retransmit_size_[i]);
 				//xbee_->send(tx_, 112);
 
-				if((0x0F & retransmit_timeout_and_tries_[i]) == CONF_COAP_MAX_RETRANSMIT_TRIES) {
+				if((0x0F & _retransmit[i].timeout_and_tries) == CONF_COAP_MAX_RETRANSMIT_TRIES) {
 #ifdef OBSERVING
-					coap_remove_observer(retransmit_mid_[i]);
+				coap_remove_observer(_retransmit[i].mid);
 #endif
-					coap_unregister_con_msg(retransmit_mid_[i], 1);
+				coap_unregister_con_msg(_retransmit[i].mid, 1);
 					return;
 				} else {
 					// ARDUINO
-					timeout_ = timeout_factor * 1000 * (retransmit_timeout_and_tries_[i] >> 4);
-					retransmit_timestamp_[i] = millis() + timeout_;
+					timeout_ = timeout_factor * 1000 * (_retransmit[i].timeout_and_tries >> 4);
+					_retransmit[i].timestamp = millis() + timeout_;
 					return;
 				}
 			}
@@ -451,27 +456,27 @@ uint8_t Coap::coap_add_observer(coap_packet_t *msg, IPAddress* ip, uint8_t resou
 {
 	uint8_t i, free_slot = 0;
 	for(i = 0; i < CONF_MAX_OBSERVERS; i++) {
-		if((observe_id_[i].observe_ip_ == *ip) && (observe_resource_[i] == resource_id)) {
+		if((_observe[i].ip == *ip) && (_observe[i].resource == resource_id)) {
 			//update token
-			memset(observe_token_[i], 0, observe_token_len_[i]);
-			observe_token_len_[i] = msg->token_len_w();
-			memcpy(observe_token_[i], msg->token_w(), msg->token_len_w());
+			memset(_observe[i].token, 0, _observe[i].token_len);
+			_observe[i].token_len = msg->token_len_w();
+			memcpy(_observe[i].token, msg->token_w(), msg->token_len_w());
 			return 1;
 		}
 		//FIXME: make a struct to hold the observers and their IPs
-		if(observe_id_[i].observe_id_ = 0) {
+		if(_observe[i].id = 0) {
 			free_slot = i + 1;
 		}
 	}
 	if(free_slot != 0) {
-		observe_id_[free_slot-1].observe_id_ = free_slot - 1;
-		observe_id_[free_slot-1].observe_ip_ = *ip;
-		observe_token_len_[free_slot-1] = msg->token_len_w();
-		memcpy(observe_token_[free_slot-1], msg->token_w(), msg->token_len_w());
-		observe_resource_[free_slot-1] = resource_id;
-		observe_last_mid_[free_slot-1] = msg->mid_w();
+		_observe[free_slot-1].id = free_slot - 1;
+		_observe[free_slot-1].ip = *ip;
+		_observe[free_slot-1].token_len = msg->token_len_w();
+		memcpy(_observe[free_slot-1].token, msg->token_w(), msg->token_len_w());
+		_observe[free_slot-1].resource = resource_id;
+		_observe[free_slot-1].last_mid = msg->mid_w();
 		// ARDUINO
-		observe_timestamp_[free_slot-1] = millis() + 1000 * resources_[resource_id].notify_time_w();
+		_observe[free_slot-1].timestamp = millis() + 1000 * resources_[resource_id].notify_time_w();
 		return 1;
 	}
 	return 0;
@@ -482,14 +487,13 @@ void Coap::coap_remove_observer(uint16_t mid)
 {
 	uint8_t i;
 	for(i = 0; i < CONF_MAX_OBSERVERS; i++) {
-		if(observe_last_mid_[i] == mid) {
-			observe_last_mid_[i] = 0;
-			observe_id_[i].observe_id_ = 0;
-			//FIXME: make a struct to hold the observers and their IPs
-			observe_resource_[i] = 0;
-			memset(observe_token_[i], 0, observe_token_len_[i]);
-			observe_token_len_[i] = 0;
-			observe_timestamp_[i] = 0;
+		if(_observe[i].last_mid == mid) {
+			_observe[i].last_mid = 0;
+			_observe[i].id = 0;
+			_observe[i].resource = 0;
+			memset(_observe[i].token, 0, _observe[i].token_len);
+			_observe[i].token_len = 0;
+			_observe[i].timestamp = 0;
 		}
 	}
 }
@@ -499,7 +503,7 @@ void Coap::coap_notify_from_timer()
 {
 	uint8_t rid;
 	for(rid = 0; rid < CONF_MAX_RESOURCES; rid++) {
-		if((observe_id_[rid].observe_id_ != 0) && (observe_timestamp_[rid] <= millis() - 60)) {
+		if((_observe[rid].id != 0) && (_observe[rid].timestamp <= millis() - 60)) {
 			if(resources_[rid].interrupt_flag_w() == true) {
 				resources_[rid].set_interrupt_flag(false);
 				//return;
@@ -527,34 +531,35 @@ void Coap::coap_notify(uint8_t resource_id)
 	uint8_t i;
 	memset(sendBuf_, 0, CONF_MAX_MSG_LEN);
 	for(i = 0; i < CONF_MAX_OBSERVERS; i++) {
-		if(observe_resource_[i] == resource_id) {
+		if(_observe[i].resource == resource_id) {
 			// send msg
 			notification.init();
 			notification.set_type(CON);
 			notification.set_mid(coap_new_mid());
 
-			notification.set_code(resources_[resource_id].execute(COAP_GET, NULL, 0, output_data, &output_data_len, notification.uri_queries_w()));
+			notification.set_code(resources_[resource_id].execute(COAP_GET, NULL, 0, output_data,
+																  &output_data_len, notification.uri_queries_w()));
 			notification.set_option(CONTENT_TYPE);
 			notification.set_content_type(resources_[resource_id].content_type());
 			notification.set_option(TOKEN);
-			notification.set_token_len(observe_token_len_[i]);
-			notification.set_token(observe_token_[i]);
+			notification.set_token_len(_observe[i].token_len);
+			notification.set_token(_observe[i].token);
 			notification.set_option(OBSERVE);
 			notification.set_observe(observe_counter());
 
 			notification.set_payload(output_data);
 			notification.set_payload_len(output_data_len);
 			notification_size = notification.packet_to_buffer(sendBuf_);
-			coap_register_con_msg(observe_id_[i].observe_id_, notification.mid_w(),
-								  sendBuf_, notification_size, coap_unregister_con_msg(observe_last_mid_[i], 0));
-			observe_last_mid_[i] = notification.mid_w();
+			coap_register_con_msg(_observe[i].id, notification.mid_w(),
+								  sendBuf_, notification_size, coap_unregister_con_msg(_observe[i].last_mid, 0));
+			_observe[i].last_mid = notification.mid_w();
 			// ARDUINO
-			_ethcoap->beginPacket(observe_id_[resource_id].observe_ip_, 5683);
-			_ethcoap->write(sendBuf_, notification_size);
-			_ethcoap->endPacket();
+			_ethudp->beginPacket(_observe[resource_id].ip, 5683);
+			_ethudp->write(sendBuf_, notification_size);
+			_ethudp->endPacket();
 			//tx_ = Tx16Request(observe_id_[i], sendBuf_, notification_size);
 			//xbee_->send(tx_, 112);
-			observe_timestamp_[i] = millis() + 1000 * resources_[resource_id].notify_time_w();
+			_observe[i].timestamp = millis() + 1000 * resources_[resource_id].notify_time_w();
 		}
 	}
 	increase_observe_counter();
