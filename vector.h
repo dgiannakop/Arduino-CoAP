@@ -1,6 +1,9 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
+#include <stdlib.h>
+#include <string.h>
+
 // Minimal class to replace std::vector
 template<typename Data>
 class Vector {

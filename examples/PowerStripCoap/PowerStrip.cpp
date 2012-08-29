@@ -19,14 +19,14 @@ void PowerStrip::init(Coap *coap)
 	plug_sensor_d[1] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_sensor_1);
 	coap->add_resource("2/c", GET, plug_sensor_d[1], true, 20, TEXT_PLAIN);
 
-// 	plug_sensor_d[2] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_sensor_2);
-// 	coap->add_resource("3/c", GET, plug_sensor_d[2], true, 20, TEXT_PLAIN);
+	plug_sensor_d[2] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_sensor_2);
+	coap->add_resource("3/c", GET, plug_sensor_d[2], true, 20, TEXT_PLAIN);
 //
-// 	plug_sensor_d[3] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_sensor_3);
-// 	coap->add_resource("4/c", GET, plug_sensor_d[3], true, 20, TEXT_PLAIN);
+	plug_sensor_d[3] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_sensor_3);
+	coap->add_resource("4/c", GET, plug_sensor_d[3], true, 20, TEXT_PLAIN);
 //
-// 	plug_sensor_d[4] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_sensor_4);
-// 	coap->add_resource("5/c", GET, plug_sensor_d[4], true, 20, TEXT_PLAIN);
+//	plug_sensor_d[4] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_sensor_4);
+//	coap->add_resource("5/c", GET, plug_sensor_d[4], true, 20, TEXT_PLAIN);
 
 
 	plug_relay_d[0] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_relay_0);
@@ -35,14 +35,14 @@ void PowerStrip::init(Coap *coap)
 	plug_relay_d[1] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_relay_1);
 	coap->add_resource("2/s", GET|PUT, plug_relay_d[1], true, 20, TEXT_PLAIN);
 
-// 	plug_relay_d[2] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_relay_2);
-// 	coap->add_resource("3/s", GET|PUT, plug_relay_d[2], true, 20, TEXT_PLAIN);
+	plug_relay_d[2] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_relay_2);
+	coap->add_resource("3/s", GET|PUT, plug_relay_d[2], true, 20, TEXT_PLAIN);
 //
-// 	plug_relay_d[3] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_relay_3);
-// 	coap->add_resource("4/s", GET|PUT, plug_relay_d[3], true, 20, TEXT_PLAIN);
+	plug_relay_d[3] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_relay_3);
+	coap->add_resource("4/s", GET|PUT, plug_relay_d[3], true, 20, TEXT_PLAIN);
 //
-// 	plug_relay_d[4] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_relay_4);
-// 	coap->add_resource("5/s", GET|PUT, plug_relay_d[4], true, 20, TEXT_PLAIN);
+//	plug_relay_d[4] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_relay_4);
+//	coap->add_resource("5/s", GET|PUT, plug_relay_d[4], true, 20, TEXT_PLAIN);
 }
 
 

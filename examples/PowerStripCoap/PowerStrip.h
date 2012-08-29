@@ -24,15 +24,15 @@ public:
 	void init(Coap *coap);
 
 	coap_status_t plug_sensor_0(uint8_t method, uint8_t *input_data, size_t input_len,
-					   uint8_t *output_data, size_t *output_len, queries_t queries);
+								uint8_t *output_data, size_t *output_len, queries_t queries);
 	coap_status_t plug_sensor_1(uint8_t method, uint8_t *input_data, size_t input_len,
-						uint8_t *output_data, size_t *output_len, queries_t queries);
+								uint8_t *output_data, size_t *output_len, queries_t queries);
 	coap_status_t plug_sensor_2(uint8_t method, uint8_t *input_data, size_t input_len,
-						uint8_t *output_data, size_t *output_len, queries_t queries);
+								uint8_t *output_data, size_t *output_len, queries_t queries);
 	coap_status_t plug_sensor_3(uint8_t method, uint8_t *input_data, size_t input_len,
-						uint8_t *output_data, size_t *output_len, queries_t queries);
+								uint8_t *output_data, size_t *output_len, queries_t queries);
 	coap_status_t plug_sensor_4(uint8_t method, uint8_t *input_data, size_t input_len,
-						uint8_t *output_data, size_t *output_len, queries_t queries);
+								uint8_t *output_data, size_t *output_len, queries_t queries);
 
 	coap_status_t plug_relay_0(uint8_t method, uint8_t *input_data, size_t input_len,
 							   uint8_t *output_data, size_t *output_len, queries_t queries);

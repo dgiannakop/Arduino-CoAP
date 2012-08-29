@@ -8,6 +8,8 @@
 #include <EthernetUdp.h>
 #include <coap.h>
 #include <RelaySens.h>
+#include <vector.h>
+
 #include "PowerStrip.h"
 
 #ifdef DEBUG
@@ -19,7 +21,7 @@ Coap coap;
 PowerStrip powerstrip;
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
-IPAddress ip(150, 140, 5, 120);
+IPAddress ip(150, 140, 5, 126);
 unsigned int localPort = 5683;      // local port to listen on
 
 EthernetUDP EthUDP;

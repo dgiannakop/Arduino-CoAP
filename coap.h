@@ -4,15 +4,14 @@
 #include <Arduino.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
+#include "vector.h"
 #include "FastDelegate.h"
 #include "coap_conf.h"
-#include "vector.h"
 #include "packet.h"
 #include "resource.h"
 
 typedef CoapPacket coap_packet_t;
 typedef CoapResource resource_t;
-typedef Vector<resource_t> vector_t;
 /*
 typedef struct request_response_t
 {
@@ -23,7 +22,6 @@ typedef struct request_response_t
 };
 typedef Vector<request_response_t> active_requests_t;
 */
-
 
 class Coap {
 	public:
@@ -85,16 +83,16 @@ class Coap {
 		/* Message ID */
 		uint16_t mid_;
 		/* New vector type resources */
-		vector_t resources_;
+		Vector<CoapResource> resources_;
 		/* Active requests vector */
 		//active_requests_t active_requests_;
 		//char *largeBuf_;
 		/* Internal buffer for any reason */
-		uint8_t helperBuf_[CONF_HELPER_BUF_LEN];
+		uint8_t* _helperBuffer; //CONF_HELPER_BUF_LEN
 		/* Internal buffer for send */
-		uint8_t sendBuf_[CONF_MAX_MSG_LEN];
+		uint8_t* _sendBuffer; //CONF_MAX_MSG_LEN
 
-		uint8_t _packetBuffer[UDP_TX_PACKET_MAX_SIZE];
+		uint8_t* _packetBuffer; //UDP_TX_PACKET_MAX_SIZE
 
 		/* _retransmit variables */
 		unsigned long timeout_;
@@ -104,22 +102,22 @@ class Coap {
 			uint8_t  reg;
 			uint8_t  timeout_and_tries;
 			uint8_t  size;
-			uint8_t  packet[CONF_MAX_MSG_LEN];
+			uint8_t* packet; //CONF_MAX_MSG_LEN
 			unsigned long timestamp;
 		};
-		retransmit_t* _retransmit;
+		retransmit_t* _retransmit; //CONF_MAX_RETRANSMIT_SLOTS
 
 		uint16_t  observe_counter_;
 		struct observe_t {
 			uint8_t   id;
 			IPAddress ip;
-			uint8_t   token[8];
+			uint8_t*  token; //8
 			uint8_t   token_len;
 			uint16_t  last_mid;
 			uint8_t   resource;
 			unsigned long timestamp;
 		};
-		observe_t* _observe;
+		observe_t* _observe; //CONF_MAX_OBSERVERS
 
 #ifdef OBSERVING
 		/* Observe variables */

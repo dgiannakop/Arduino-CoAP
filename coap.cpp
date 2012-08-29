@@ -40,6 +40,18 @@ void Coap::init(EthernetClass* ethernet, EthernetUDP* ethudp)
 
 	_ethernet = ethernet;
 	_ethudp = ethudp;
+
+	_retransmit = (retransmit_t*)malloc(CONF_MAX_RETRANSMIT_SLOTS * sizeof(retransmit_t));
+	for(uint8_t i = 0; i <  CONF_MAX_RETRANSMIT_SLOTS; i++)
+		_retransmit[i].packet = (uint8_t*)malloc(CONF_MAX_MSG_LEN * sizeof(uint8_t));
+
+	_observe = (observe_t*)malloc(CONF_MAX_OBSERVERS * sizeof(observe_t));
+	for(uint8_t i = 0; i <  CONF_MAX_OBSERVERS; i++)
+		_observe[i].token = (uint8_t*)malloc(8 * sizeof(uint8_t));
+
+	_helperBuffer = (uint8_t*)malloc(CONF_HELPER_BUF_LEN * sizeof(uint8_t));
+	_sendBuffer = (uint8_t*)malloc(CONF_MAX_MSG_LEN * sizeof(uint8_t));
+	_packetBuffer = (uint8_t*)malloc(UDP_TX_PACKET_MAX_SIZE * sizeof(uint8_t));
 }
 #endif
 
@@ -54,11 +66,11 @@ void Coap::handler()
 		// If broadcasting is set, send the broadcast message (not a CoAP feature)
 // 		if(broadcasting == true) {
 // 			delay(200);
-// 			helperBuf_[0] = 0x01;
-// 			//tx_ = Tx16Request(0xffff, helperBuf_, 1);
+// 			_helperBuffer[0] = 0x01;
+// 			//tx_ = Tx16Request(0xffff, _helperBuffer, 1);
 // 			//xbee_->send(tx_, 112);
 // 			_ethudp->beginPacket(_ethudp->getBroadCast(), 5683);
-// 			_ethudp->write(helperBuf_, CONF_HELPER_BUF_LEN);
+// 			_ethudp->write(_helperBuffer, CONF_HELPER_BUF_LEN);
 // 			_ethudp->endPacket();
 // 		} else {
 			delay(50);
@@ -101,7 +113,7 @@ void Coap::receiver(uint8_t *buf, IPAddress from, uint8_t len)
 
 	memset(output_data, 0, CONF_LARGE_BUF_LEN);
 	// parse the message
-	coap_error_code = msg.buffer_to_packet(len, buf, (char *)helperBuf_);
+	coap_error_code = msg.buffer_to_packet(len, buf, (char *)_helperBuffer);
 	if(msg.version_w() != COAP_VERSION) {
 		coap_error_code = BAD_REQUEST;
 	}
@@ -301,17 +313,17 @@ coap_status_t Coap::resource_discovery(uint8_t method, uint8_t *input_data, size
 
 void Coap::coap_send(coap_packet_t *msg, IPAddress dest)
 {
-	memset(sendBuf_, 0, CONF_MAX_MSG_LEN);
-	uint8_t data_len = msg->packet_to_buffer(sendBuf_);
+	memset(_sendBuffer, 0, CONF_MAX_MSG_LEN);
+	uint8_t data_len = msg->packet_to_buffer(_sendBuffer);
 	if((msg->type_w() == CON)) {
-		coap_register_con_msg(dest, msg->mid_w(), sendBuf_, data_len, 0);
+		coap_register_con_msg(dest, msg->mid_w(), _sendBuffer, data_len, 0);
 	}
 	_ethudp->beginPacket(dest, _ethudp->remotePort());
-	_ethudp->write(sendBuf_, data_len);
+	_ethudp->write(_sendBuffer, data_len);
 	_ethudp->endPacket();
-	//tx_ = Tx16Request(dest, sendBuf_, data_len);
+	//tx_ = Tx16Request(dest, _sendBuffer, data_len);
 	//xbee_->send(tx_, 112);
-	DBG(debug_msg(sendBuf_, data_len));
+	DBG(debug_msg(_sendBuffer, data_len));
 }
 
 
@@ -529,7 +541,7 @@ void Coap::coap_notify(uint8_t resource_id)
 	uint8_t output_data[CONF_LARGE_BUF_LEN];
 	size_t output_data_len;
 	uint8_t i;
-	memset(sendBuf_, 0, CONF_MAX_MSG_LEN);
+	memset(_sendBuffer, 0, CONF_MAX_MSG_LEN);
 	for(i = 0; i < CONF_MAX_OBSERVERS; i++) {
 		if(_observe[i].resource == resource_id) {
 			// send msg
@@ -549,15 +561,15 @@ void Coap::coap_notify(uint8_t resource_id)
 
 			notification.set_payload(output_data);
 			notification.set_payload_len(output_data_len);
-			notification_size = notification.packet_to_buffer(sendBuf_);
+			notification_size = notification.packet_to_buffer(_sendBuffer);
 			coap_register_con_msg(_observe[i].id, notification.mid_w(),
-								  sendBuf_, notification_size, coap_unregister_con_msg(_observe[i].last_mid, 0));
+								  _sendBuffer, notification_size, coap_unregister_con_msg(_observe[i].last_mid, 0));
 			_observe[i].last_mid = notification.mid_w();
 			// ARDUINO
 			_ethudp->beginPacket(_observe[resource_id].ip, 5683);
-			_ethudp->write(sendBuf_, notification_size);
+			_ethudp->write(_sendBuffer, notification_size);
 			_ethudp->endPacket();
-			//tx_ = Tx16Request(observe_id_[i], sendBuf_, notification_size);
+			//tx_ = Tx16Request(observe_id_[i], _sendBuffer, notification_size);
 			//xbee_->send(tx_, 112);
 			_observe[i].timestamp = millis() + 1000 * resources_[resource_id].notify_time_w();
 		}
@@ -582,10 +594,10 @@ void Coap::increase_observe_counter()
 
 String Coap::make_string(char *charArray, size_t charLen)
 {
-	memset(helperBuf_, 0, CONF_HELPER_BUF_LEN);
-	memcpy(helperBuf_, charArray, charLen);
-	helperBuf_[charLen] = '\0';
-	return String((char *)helperBuf_);
+	memset(_helperBuffer, 0, CONF_HELPER_BUF_LEN);
+	memcpy(_helperBuffer, charArray, charLen);
+	_helperBuffer[charLen] = '\0';
+	return String((char *)_helperBuffer);
 }
 
 

@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 #include "FastDelegate.h"
-#include "vector.h"
 #include "packet.h"
 
 typedef fastdelegate::FastDelegate6<uint8_t, uint8_t*, size_t, uint8_t*, size_t*, queries_t, coap_status_t> my_delegate_t;

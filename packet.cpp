@@ -1,7 +1,6 @@
 #include "packet.h"
 
 
-
 void CoapPacket::init(void)
 {
 	version_ = COAP_VERSION;

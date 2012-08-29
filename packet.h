@@ -2,7 +2,6 @@
 #define PACKET_H
 
 #include <Arduino.h>
-#include "vector.h"
 #include "coap_conf.h"
 
 typedef struct query_t {

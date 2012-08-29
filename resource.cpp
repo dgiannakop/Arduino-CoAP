@@ -1,4 +1,6 @@
 #include "resource.h"
+
+
 CoapResource::CoapResource(String name, uint8_t methods, my_delegate_t delegate,
 						   bool fast_resource, uint16_t notify_time, uint8_t content_type)
 {
