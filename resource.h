@@ -18,23 +18,23 @@ class CoapResource {
 		void set_interrupt_flag(bool flag);
 		bool is_set();
 		String name();
-		uint8_t name_length();
+		uint8_t  name_length();
 		void nameToStr(char *buf, size_t len);
-		uint8_t method_allowed(uint8_t method);
+		uint8_t  method_allowed(uint8_t method);
 		uint16_t notify_time_w();
-		uint8_t resource_len();
+		uint8_t  resource_len();
 		bool fast_resource();
-		uint8_t content_type();
+		uint8_t  content_type();
 		bool interrupt_flag_w();
 	private:
 		bool is_set_;
 		my_delegate_t del_;
 		String name_;
-		uint8_t methods_;
+		uint8_t  methods_;
 		uint16_t notify_time_;
 		bool fast_resource_;
-		uint8_t resource_len_;
-		uint8_t content_type_;
+		uint8_t  resource_len_;
+		uint8_t  content_type_;
 		bool interrupt_flag_;
 };
 #endif

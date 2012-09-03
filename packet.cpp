@@ -189,14 +189,14 @@ uint8_t CoapPacket::packet_to_buffer(uint8_t *buf)
 		opt_count_ += 1;
 	}
 	// CoAP Header
-	// The first byte of the buf is a special case for XBee that we is not present in Ethernet
+	// The first byte of the buf is a special case for XBee that is not present in Ethernet
 	//buf[0] = WISELIB_MID_COAP;
-	buf[0] = COAP_HEADER_VERSION_MASK & version_ << COAP_HEADER_VERSION_SHIFT;
+	buf[0]  = COAP_HEADER_VERSION_MASK & version_ << COAP_HEADER_VERSION_SHIFT;
 	buf[0] |= COAP_HEADER_TYPE_MASK & type_ << COAP_HEADER_TYPE_SHIFT;
 	buf[0] |= COAP_HEADER_OPT_COUNT_MASK & opt_count_ << COAP_HEADER_OPT_COUNT_SHIFT;
-	buf[1] = code_;
-	buf[2] = 0xFF & (mid_ >> 8);
-	buf[3] = 0xFF & mid_;
+	buf[1]  = code_;
+	buf[2]  = 0xFF & (mid_ >> 8);
+	buf[3]  = 0xFF & mid_;
 	//payload
 	memcpy(&buf[buf_index], payload_, payload_len_);
 	return buf_index + payload_len_;

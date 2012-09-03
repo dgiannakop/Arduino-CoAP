@@ -23,6 +23,35 @@ typedef struct request_response_t
 typedef Vector<request_response_t> active_requests_t;
 */
 
+/*
+ * Retransmit class
+ */
+struct retransmit_t {
+	uint16_t id;
+	uint16_t mid;
+	uint8_t  reg;
+	uint8_t  timeout_and_tries;
+	uint8_t  size;
+	uint8_t* packet; //size: CONF_MAX_MSG_LEN
+	unsigned long timestamp;
+};
+
+/*
+ * Class used to hold observers
+ */
+struct observer_t {
+	uint8_t   id;
+	IPAddress ip;
+	uint8_t*  token; //size: 8
+	uint8_t   token_len;
+	uint16_t  last_mid;
+	uint8_t   resource;
+	unsigned long timestamp;
+};
+
+/*
+ * Coap class
+ */
 class Coap {
 	public:
 #ifdef DEBUG
@@ -78,6 +107,8 @@ class Coap {
 		// Serial debug
 		SoftwareSerial *mySerial_;
 #endif
+		retransmit_t* allocate_retransmit_slot();
+		observer_t*   allocate_observer_slot();
 		//bool broadcasting;
 		unsigned long timestamp;
 		/* Message ID */
@@ -91,37 +122,19 @@ class Coap {
 		uint8_t* _helperBuffer; //CONF_HELPER_BUF_LEN
 		/* Internal buffer for send */
 		uint8_t* _sendBuffer; //CONF_MAX_MSG_LEN
-
+		/* buffer used by the arduino's' udp implementation */
 		uint8_t* _packetBuffer; //UDP_TX_PACKET_MAX_SIZE
 
 		/* _retransmit variables */
-		unsigned long timeout_;
-		struct retransmit_t {
-			uint16_t id;
-			uint16_t mid;
-			uint8_t  reg;
-			uint8_t  timeout_and_tries;
-			uint8_t  size;
-			uint8_t* packet; //CONF_MAX_MSG_LEN
-			unsigned long timestamp;
-		};
-		retransmit_t* _retransmit; //CONF_MAX_RETRANSMIT_SLOTS
+		unsigned long _timeout;
+		uint8_t _retransmit_slot_counter;
+		retransmit_t** _retransmit; //size: CONF_MAX_RETRANSMIT_SLOTS
 
-		uint16_t  observe_counter_;
-		struct observe_t {
-			uint8_t   id;
-			IPAddress ip;
-			uint8_t*  token; //8
-			uint8_t   token_len;
-			uint16_t  last_mid;
-			uint8_t   resource;
-			unsigned long timestamp;
-		};
-		observe_t* _observe; //CONF_MAX_OBSERVERS
+		uint8_t  _observer_slot_counter;
+		observer_t** _observe; //size: CONF_MAX_OBSERVERS
 
 #ifdef OBSERVING
 		/* Observe variables */
 #endif
 };
-
 #endif

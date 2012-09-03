@@ -110,31 +110,31 @@ class CoapPacket {
 	public:
 		void init(void);
 		coap_status_t buffer_to_packet(uint8_t len, uint8_t *buf, char *helperBuf);
-		uint8_t packet_to_buffer(uint8_t *buf);
+		uint8_t  packet_to_buffer(uint8_t *buf);
 		// get
-		uint8_t version_w();
-		uint8_t type_w();
-		uint8_t opt_count_w();
-		uint8_t code_w();
+		uint8_t  version_w();
+		uint8_t  type_w();
+		uint8_t  opt_count_w();
+		uint8_t  code_w();
 		uint16_t mid_w();
 		uint32_t is_option(uint8_t opt);
-		uint8_t content_type_w();
+		uint8_t  content_type_w();
 		uint32_t max_age_w();
 		uint16_t uri_host_w();
 		uint16_t uri_port_w();
-		uint8_t uri_path_len_w();
-		char *uri_path_w();
+		uint8_t  uri_path_len_w();
+		char*    uri_path_w();
 		uint16_t observe_w();
-		uint8_t token_len_w();
-		uint8_t *token_w();
+		uint8_t  token_len_w();
+		uint8_t* token_w();
 		uint16_t accept_w();
 		queries_t uri_queries_w();
 		uint32_t block2_num_w();
-		uint8_t block2_more_w();
+		uint8_t  block2_more_w();
 		uint16_t block2_size_w();
 		uint32_t block2_offset_w();
-		size_t payload_len_w();
-		uint8_t *payload_w();
+		size_t   payload_len_w();
+		uint8_t* payload_w();
 		// set
 		void set_version(uint8_t version);
 		void set_type(uint8_t type);
@@ -160,25 +160,25 @@ class CoapPacket {
 		void set_payload_len(uint8_t payload_len);
 		void set_payload(uint8_t *payload);
 	protected:
-		uint8_t add_fence_opt(uint8_t opt, uint8_t *current_delta, uint8_t *buf);
-		uint8_t set_opt_header(uint8_t delta, size_t len, uint8_t *buf);
-		uint8_t set_int_opt_value(uint8_t opt, uint8_t current_delta, uint8_t *buf, uint32_t value);
+		uint8_t  add_fence_opt(uint8_t opt, uint8_t *current_delta, uint8_t *buf);
+		uint8_t  set_opt_header(uint8_t delta, size_t len, uint8_t *buf);
+		uint8_t  set_int_opt_value(uint8_t opt, uint8_t current_delta, uint8_t *buf, uint32_t value);
 		uint32_t get_int_opt_value(uint8_t *value, uint16_t length);
 		void merge_options(char **dst, size_t *dst_len, uint8_t *value, uint16_t length, char seperator);
 		void make_uri_query(uint8_t *value, uint16_t length, char *largeBuf);
 		uint8_t split_option(uint8_t opt, uint8_t current_delta, uint8_t *buf, char *seperator);
 		uint8_t power_of_two(uint16_t num);
-		String make_string(char *charArray, size_t charLen, char *largeBuf);
+		String  make_string(char *charArray, size_t charLen, char *largeBuf);
 	private:
-		uint8_t version_;
-		uint8_t type_;
-		uint8_t opt_count_;
-		uint8_t code_;
+		uint8_t  version_;
+		uint8_t  type_;
+		uint8_t  opt_count_;
+		uint8_t  code_;
 		uint16_t mid_;
 
 		uint32_t options_;
 
-		uint8_t content_type_; // 1
+		uint8_t  content_type_; // 1
 		uint32_t max_age_; // 2
 		//TODO...
 		//size_t proxy_uri_len_; // 3
@@ -189,11 +189,11 @@ class CoapPacket {
 		uint16_t uri_host_; // 5
 		uint16_t uri_port_; // 7
 		//TODO...
-		size_t uri_path_len_; // 9
-		char *uri_path_; // 9
+		size_t   uri_path_len_; // 9
+		char*    uri_path_; // 9
 		uint16_t observe_; // 10
-		uint8_t token_len_; // 11
-		uint8_t token_[8]; // 11
+		uint8_t  token_len_; // 11
+		uint8_t  token_[8]; // 11
 		uint16_t accept_; // 12
 		//TODO...
 		//uint8_t if_match_len_; // 13
@@ -202,7 +202,7 @@ class CoapPacket {
 
 		// block2 17
 		uint32_t block2_num_; // 17
-		uint8_t block2_more_; // 17
+		uint8_t  block2_more_; // 17
 		uint16_t block2_size_; // 17
 		uint32_t block2_offset_; // 17
 		//uint32_t block1_num_; // 19
@@ -211,7 +211,7 @@ class CoapPacket {
 		//uint32_t block1_offset_; // 19
 		//uint8_t if_none_match; // 21
 
-		uint8_t payload_len_;
-		uint8_t *payload_;
+		uint8_t  payload_len_;
+		uint8_t* payload_;
 };
 #endif
