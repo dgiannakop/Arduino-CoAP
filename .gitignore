@@ -1,0 +1,7 @@
+*~
+*.o
+*.class
+*.elf
+*.kdev*
+*.geany
+*.kate-swp
