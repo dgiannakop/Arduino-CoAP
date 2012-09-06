@@ -1,118 +1,89 @@
 #include "App.h"
 
-void App::init( Coap* coap, resource_t* resources, uint8_t rid, char* data )
+void App::init(Coap *coap)
 {
-   coap_ = coap;
-   resources_ = resources;
-   data_ = data;
-   my_delegate_t delegate;
+	coap_ = coap;
+	my_delegate_t delegate;
+	my_delegate_t delegate2;
+	my_delegate_t delegate3;
 
-   ledState = 0;
+	lampPins[0] = 3;
+	lampPins[1] = 4;
+	lampPins[2] = 5;
+	lampPins[3] = 6;
 
-   // first we create a delegate for our callback function
-   delegate = fastdelegate::MakeDelegate( this, &App::debug_info );
-   // set the method, arguments are: QuerryID, Method
-   resources[rid].set_method( 0, GET );
-   resources[rid].set_method( 0, PUT );
-   // pass the delegate to the object, for the desired QuerryID
-   resources[rid].reg_callback( delegate, 0 );
-   // register the resource with arguments: Name, FastRespone, Default NotifyTime, Expected Length, ContentType
-   // Zero default notification time, disables observing capability
-   // Expected Length doesn't really matter
-   resources[rid].reg_resource( "sensors/temp", true, 30, 5, TEXT_PLAIN );
-   /*
-      delegate = fastdelegate::MakeDelegate( this, &App::temp_status );
-      resources[rid].set_method( 1, GET );
-      resources[rid].set_method( 1, PUT );
-      resources[rid].reg_callback( delegate, 1 );
-      // QuerryID, QuerryName
-      resources[rid].reg_query( 1, "act=status" );
-   */
-   delegate = fastdelegate::MakeDelegate( this, &App::change_observe_timer );
-   resources[rid].set_method( 2, GET );
-   resources[rid].set_method( 2, PUT );
-   resources[rid].reg_callback( delegate, 2 );
-   resources[rid].reg_query( 2, "act=observe" );
+	lampStatuses[0] = 0;
+	lampStatuses[1] = 0;
+	lampStatuses[2] = 0;
+	lampStatuses[3] = 0;
+
+	ledState = 0;
+
+	// first we create a delegate for our callback function
+	delegate = fastdelegate::MakeDelegate(this, &App::test);
+	coap->add_resource("lamps", GET | PUT, delegate, true, 20, TEXT_PLAIN);
+	delegate2 = fastdelegate::MakeDelegate( this, &App::test2 );
+	coap->add_resource("temp1", GET | PUT, delegate2, true, 30, APPLICATION_XML);
+	//delegate3 = fastdelegate::MakeDelegate( this, &App::test3 );
+	//coap->add_resource("msg", PUT, delegate3, true, 60, TEXT_PLAIN);
 }
- 
-char* App::get_temp( uint8_t rid, uint8_t method )
+
+void App::setLamp(int lamp, int value)
 {
-   resources_[rid].set_payload_len( sprintf( data_, "working" ) );
-   return data_;
+	lampStatuses[lamp] = value;
+	digitalWrite(lampPins[lamp], lampStatuses[lamp]);
 }
- 
-char* App::temp_status( uint8_t rid, uint8_t method )
+
+
+coap_status_t App::test(uint8_t method, uint8_t *input_data, size_t input_data_len,
+						uint8_t *output_data, size_t *output_data_len, queries_t queries)
 {
-   //resources_[rid].set_payload_len(sprintf(data_, "true" ));
-   return data_;
+	//*output_data_len = sprintf( (char*)output_data, "working" );
+	//uint8_t* input = resources_[rid].input_data_w();
+	if(method == GET) {
+		*output_data_len = sprintf((char *)output_data, "%d", lampStatuses[0]);
+		return CONTENT;
+	} else if(method == PUT) {
+		setLamp(0, *input_data - 0x30);
+		*output_data_len = sprintf((char *)output_data, "%d", lampStatuses[0]);
+		return CHANGED;
+	}
 }
- 
-char* App::change_observe_timer( uint8_t rid, uint8_t method )
+
+
+coap_status_t App::test2(uint8_t method, uint8_t *input_data, size_t input_data_len,
+						 uint8_t *output_data, size_t *output_data_len, queries_t queries)
 {
-   uint8_t* data = resources_[rid].input_data_w();
-   uint8_t len = resources_[rid].input_data_len_w();
-   uint16_t value = 0;
-   uint8_t i;
-   if ( method == GET )
-   {
-      resources_[rid].set_payload_len( sprintf( data_, "%d", resources_[rid].notify_time_w() ) );
-   }
-   if ( method == PUT )
-   {
-      for( i = 0; i < len; i++ )
-      {
-         value = value * 10 + ( data[i] - 0x30 );
-      }
-      resources_[rid].set_notify_time( value );
-      resources_[rid].set_payload_len( sprintf( data_, "set:%d", value ) );
-   }
-   return data_;
+	*output_data_len = sprintf((char *)output_data, "working2");
+	/*
+	char char_buffer[query_value.length()];
+	query_value.toCharArray(char_buffer, query_value.length());
+	int i = int(char_buffer);
+	coap_->update_resource("test", GET | PUT, true, i, TEXT_PLAIN);
+	//resources_[rid].set_payload_len( sprintf( data_, "working" ) );
+	*/
+	return CONTENT;
 }
- 
-char* App::debug_info( uint8_t rid, uint8_t method )
+
+
+coap_status_t App::test3(uint8_t method, uint8_t *input_data, size_t input_data_len,
+						 uint8_t *output_data, size_t *output_data_len, queries_t queries)
 {
-   uint8_t* data = resources_[rid].input_data_w();
-   uint8_t len = resources_[rid].input_data_len_w();
-   uint8_t i;
-   uint8_t value;
-   if ( method == GET )
-   {
-      if ( ledState == 0 )
-      {
-         resources_[rid].set_payload_len( sprintf( data_, "led-state:OFF" ) );
-      }
-      else if (ledState == 1 )
-      {
-         resources_[rid].set_payload_len( sprintf( data_, "led-state:ON" ) );
-      }
-      //resources_[rid].set_payload_len(sprintf( data_, "led-state:%d", /*coap_->observe_id_[0], coap_->observe_token_[0],*/ ledState));
-   }
-   if ( method == PUT )
-   {
-      if (data[0] == 0x31)
-      {
-        ledState = 1;
-        digitalWrite( 10, HIGH );
-      }
-      else if (data[0] == 0x32)
-      {
-        ledState = 0;
-        digitalWrite( 10, LOW );
-      }
-      if ( ledState == 0 )
-      {
-         resources_[rid].set_payload_len( sprintf( data_, "led-state:OFF" ) );
-      }
-      else if (ledState == 1 )
-      {
-         resources_[rid].set_payload_len( sprintf( data_, "led-state:ON" ) );
-      }
-      //resources_[rid].set_notify_time( value );
-      //resources_[rid].set_payload_len( sprintf( data_, "set:%d", value ) );
-   }
-   return data_;
+	/*
+	int i;
+	for(i=0; i<input_data_len; i++); {
+		output_data[i] = input_data[i];
+	}
+	*output_data_len = input_data_len;
+	*/
+	*output_data_len = sprintf((char *)output_data, "%d", input_data_len);
+	/*
+	char char_buffer[query_value.length()];
+	query_value.toCharArray(char_buffer, query_value.length());
+	int i = int(char_buffer);
+	coap_->update_resource("test", GET | PUT, true, i, TEXT_PLAIN);
+	//resources_[rid].set_payload_len( sprintf( data_, "working" ) );
+	*/
+	return CONTENT;
 }
-// in case of a new value, you want to notify your observers.
-// from your routine you must call "coap_notify_from_interrupt( rid );"
-// observers will be notified
- 
+

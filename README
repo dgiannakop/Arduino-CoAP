@@ -1,8 +1,2 @@
-Basic CoAP library for arduino.
-Communication based on XbeeRadio https://github.com/mksense/mac/tree/master/xbee/arduino
-
-***************************
-
-Current code has been tested and woking on Arduino UNO
-
-***************************
+CoAP for Arduino over Ethernet.
+Code is still in alpha.
