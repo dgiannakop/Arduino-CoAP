@@ -1,6 +1,7 @@
 #ifndef PowerStrip_h
 #define PowerStrip_h
 
+#include <avr/pgmspace.h>
 #include <Arduino.h>
 #include <coap.h>
 #include <RelaySens.h>

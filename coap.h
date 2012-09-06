@@ -87,8 +87,8 @@ class Coap {
 		void coap_notify_from_timer();
 		void coap_notify_from_interrupt(uint8_t resource_id);
 		void coap_notify(uint8_t resource_id);
-		uint16_t observe_counter();
-		void increase_observe_counter();
+//		uint8_t get_observer_counter();
+//		void    inc_observer_counter();
 #endif
 		String make_string(char *charArray, size_t charLen);
 		void debug_msg(uint8_t *msg, uint8_t len);
@@ -108,7 +108,9 @@ class Coap {
 		SoftwareSerial *mySerial_;
 #endif
 		retransmit_t* allocate_retransmit_slot();
+		void free_retransmit_slot(retransmit_t*);
 		observer_t*   allocate_observer_slot();
+		void free_observer_slot(observer_t*);
 		//bool broadcasting;
 		unsigned long timestamp;
 		/* Message ID */
@@ -125,13 +127,16 @@ class Coap {
 		/* buffer used by the arduino's' udp implementation */
 		uint8_t* _packetBuffer; //UDP_TX_PACKET_MAX_SIZE
 
+		uint8_t* _largeBuffer;
+
 		/* _retransmit variables */
 		unsigned long _timeout;
 		uint8_t _retransmit_slot_counter;
 		retransmit_t** _retransmit; //size: CONF_MAX_RETRANSMIT_SLOTS
 
+		uint16_t _observe_counter;
 		uint8_t  _observer_slot_counter;
-		observer_t** _observe; //size: CONF_MAX_OBSERVERS
+		observer_t** _observer; //size: CONF_MAX_OBSERVERS
 
 #ifdef OBSERVING
 		/* Observe variables */
