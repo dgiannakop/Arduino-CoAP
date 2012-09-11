@@ -21,7 +21,7 @@ Coap coap;
 PowerStrip powerstrip;
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
-IPAddress ip(150, 140, 5, 126);
+IPAddress ip(150, 140, 5, 64);
 unsigned int localPort = 5683;      // local port to listen on
 
 EthernetUDP EthUDP;

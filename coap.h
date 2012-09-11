@@ -4,7 +4,6 @@
 #include <Arduino.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
-#include "vector.h"
 #include "FastDelegate.h"
 #include "coap_conf.h"
 #include "packet.h"
@@ -76,17 +75,17 @@ class Coap {
 		//coap_status_t call_resource(uint8_t method, uint8_t resource_id, uint8_t* input_data,
 		//							  size_t input_data_len, uint8_t* output_data, size_t* output_data_len,
 		//							  queries_t queries );
-		void coap_blockwise_response(coap_packet_t *req, coap_packet_t *resp, uint8_t **data, size_t *data_len);
+		int coap_blockwise_response(coap_packet_t *req, coap_packet_t *resp, uint8_t **data, size_t *data_len);
 		void coap_register_con_msg(uint16_t id, uint16_t mid, uint8_t *buf, uint8_t size, uint8_t tries);
 		uint8_t coap_unregister_con_msg(uint16_t mid, uint8_t flag);
 		void coap_retransmit_loop();
 		//void coap_resource_discovery( size_t *payload_len );
-#ifdef OBSERVING
+#ifdef ENABLE_OBSERVE
 		uint8_t coap_add_observer(coap_packet_t *msg, IPAddress* id, uint8_t resource_id);
 		void coap_remove_observer(uint16_t mid);
 		void coap_notify_from_timer();
 		void coap_notify_from_interrupt(uint8_t resource_id);
-		void coap_notify(uint8_t resource_id);
+		void coap_notify();
 //		uint8_t get_observer_counter();
 //		void    inc_observer_counter();
 #endif
@@ -107,38 +106,46 @@ class Coap {
 		// Serial debug
 		SoftwareSerial *mySerial_;
 #endif
-		retransmit_t* allocate_retransmit_slot();
-		void free_retransmit_slot(retransmit_t*);
-		observer_t*   allocate_observer_slot();
-		void free_observer_slot(observer_t*);
 		//bool broadcasting;
-		unsigned long timestamp;
+		unsigned long _timestamp;
 		/* Message ID */
-		uint16_t mid_;
-		/* New vector type resources */
-		Vector<CoapResource> resources_;
+		uint16_t _mid;
 		/* Active requests vector */
 		//active_requests_t active_requests_;
 		//char *largeBuf_;
 		/* Internal buffer for any reason */
-		uint8_t* _helperBuffer; //CONF_HELPER_BUF_LEN
+		uint8_t* _helper_buffer; //CONF_HELPER_BUF_LEN
 		/* Internal buffer for send */
-		uint8_t* _sendBuffer; //CONF_MAX_MSG_LEN
+		uint8_t* _send_buffer; //CONF_MAX_MSG_LEN
 		/* buffer used by the arduino's' udp implementation */
-		uint8_t* _packetBuffer; //UDP_TX_PACKET_MAX_SIZE
+		uint8_t* _packet_buffer; //UDP_TX_PACKET_MAX_SIZE
 
-		uint8_t* _largeBuffer;
+		uint8_t* _large_buffer;
 
-		/* _retransmit variables */
+		/* resource variables */
+		uint8_t _resource_counter;
+		resource_t _resource[CONF_MAX_RESOURCES];
+		//resource_t** _resource; // size: CONF_MAX_RESOURCES
+		resource_t* allocateResourceSlot(); // unused
+		void freeResourceSlot(resource_t*); // unused
+
+		/* retransmit variables */
 		unsigned long _timeout;
 		uint8_t _retransmit_slot_counter;
-		retransmit_t** _retransmit; //size: CONF_MAX_RETRANSMIT_SLOTS
+		retransmit_t** _retransmit; // size: CONF_MAX_RETRANSMIT_SLOTS
+		/* retransmit functions */
+		retransmit_t* allocateRetransmitSlot();
+		void freeRetransmitSlot(retransmit_t*);
 
+		/* observer variables */
 		uint16_t _observe_counter;
 		uint8_t  _observer_slot_counter;
-		observer_t** _observer; //size: CONF_MAX_OBSERVERS
+		observer_t** _observer; // size: CONF_MAX_OBSERVERS
+		/* observer functions */
+		observer_t*   allocateObserverSlot();
+		void freeObserverSlot(observer_t*);
 
-#ifdef OBSERVING
+#ifdef ENABLE_OBSERVE
 		/* Observe variables */
 #endif
 };

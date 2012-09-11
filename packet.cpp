@@ -108,8 +108,8 @@ coap_status_t CoapPacket::buffer_to_packet(uint8_t len, uint8_t *buf, char *larg
 					block2_num_ = get_int_opt_value(current_opt, opt_len);
 					block2_more_ = (block2_num_ & 0x08) >> 3;
 					block2_size_ = 16 << (block2_num_ & 0x07);
-					block2_offset_ = (block2_num_ & ~0x0F) << (block2_num_ & 0x07);
-					block2_num_ >>= 4;
+					block2_offset_ = ((block2_num_ & 0xF0) >>4)*block2_size_;
+					block2_num_ = ((block2_num_ & 0xF0) >>4)&0x0F;
 					break;
 				case BLOCK1:
 					set_option(BLOCK1);
@@ -266,7 +266,7 @@ void CoapPacket::merge_options(char **dst, size_t *dst_len, uint8_t *value, uint
 		memmove((*dst) + (*dst_len), value, length);
 		*dst_len += length;
 	} else {
-		*dst = (char *) value;
+		*dst = (char*) value;
 		*dst_len = length;
 	}
 }
