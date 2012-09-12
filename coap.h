@@ -135,7 +135,7 @@ class Coap {
 		retransmit_t** _retransmit; // size: CONF_MAX_RETRANSMIT_SLOTS
 		/* retransmit functions */
 		retransmit_t* allocateRetransmitSlot();
-		void freeRetransmitSlot(retransmit_t*);
+		void freeRetransmitSlot(retransmit_t*, uint8_t indx);
 
 		/* observer variables */
 		uint16_t _observe_counter;
@@ -143,7 +143,7 @@ class Coap {
 		observer_t** _observer; // size: CONF_MAX_OBSERVERS
 		/* observer functions */
 		observer_t*   allocateObserverSlot();
-		void freeObserverSlot(observer_t*);
+		void freeObserverSlot(observer_t*, uint8_t indx);
 
 #ifdef ENABLE_OBSERVE
 		/* Observe variables */

@@ -457,8 +457,7 @@ uint8_t Coap::coap_unregister_con_msg(uint16_t mid, uint8_t flag)
 	while(i < _retransmit_slot_counter) {
 		if(_retransmit[i]->mid == mid) {
 			if(flag == 1) {
-				freeRetransmitSlot(_retransmit[i]);
-				_retransmit_slot_counter--;
+				freeRetransmitSlot(_retransmit[i], i);
 				return 0;
 			} else {
 				_retransmit[i]->reg = 0;
@@ -545,8 +544,7 @@ void Coap::coap_remove_observer(uint16_t mid)
 	uint8_t i;
 	for(i = 0; i < _observer_slot_counter; i++) {
 		if(_observer[i]->last_mid == mid) {
-			freeObserverSlot(_observer[i]);
-			_observer_slot_counter--;
+			freeObserverSlot(_observer[i], i);
 			return;
 		}
 	}
@@ -695,10 +693,13 @@ observer_t* Coap::allocateObserverSlot()
 	return(new_slot);
 }
 
-void Coap::freeObserverSlot(observer_t* slot)
+void Coap::freeObserverSlot(observer_t* slot, uint8_t indx)
 {
 	free(slot->token);
 	free(slot);
+	for(indx + 1; indx < _observer_slot_counter; indx++)
+		_observer[indx] = _observer[indx+1];
+	_observer_slot_counter--;
 }
 
 
@@ -716,8 +717,11 @@ retransmit_t* Coap::allocateRetransmitSlot()
 	return(new_slot);
 }
 
-void Coap::freeRetransmitSlot(retransmit_t* slot)
+void Coap::freeRetransmitSlot(retransmit_t* slot, uint8_t indx)
 {
 	free(slot->packet);
 	free(slot);
+	for(indx + 1; indx < _retransmit_slot_counter; indx++)
+		_retransmit[indx] = _retransmit[indx+1];
+	_retransmit_slot_counter--;
 }
