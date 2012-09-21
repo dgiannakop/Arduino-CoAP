@@ -50,7 +50,7 @@ void Coap::handler()
 			Serial.print(_ethudp->remoteIP());
 			Serial.print(":");
 			Serial.println(_ethudp->remotePort());
-		)
+		   )
 		_ethudp->read(_packet_buffer, packet_len);
 		//call the receiver
 		receiver(_packet_buffer, _ethudp->remoteIP(), _ethudp->remotePort(), packet_len);
@@ -190,11 +190,11 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len)
 		//empty msg, ack, or rst
 
 		if(msg.code_w() == 0) {
-			#ifdef ENABLE_OBSERVE
+#ifdef ENABLE_OBSERVE
 			if(msg.type_w() == RST) {
 				coap_remove_observer(msg.mid_w());
 			}
-			#endif
+#endif
 			coap_unregister_con_msg(msg.mid_w(), 1); //FIXME: was 0
 			return; // nothing else to do
 		}
@@ -290,9 +290,9 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len)
 					coap_unregister_con_msg(msg.mid_w(), 1); //FIXME: was 0
 					break;
 				case RST:
-					#ifdef ENABLE_OBSERVE
+#ifdef ENABLE_OBSERVE
 					coap_remove_observer(msg.mid_w());
-					#endif
+#endif
 					coap_unregister_con_msg(msg.mid_w(), 1); //FIXME: was 0
 					break;
 			}
@@ -330,7 +330,7 @@ void Coap::coap_send(coap_packet_t* msg, IPAddress dest, uint16_t port)
 		Serial.print(dest);
 		Serial.print(":");
 		Serial.println(port);
-	)
+	   )
 	udp_send(dest, port, _send_buffer, data_len);
 	//_ethudp->beginPacket(dest, port);
 	//_ethudp->write(_send_buffer, data_len);
@@ -393,7 +393,8 @@ int Coap::coap_blockwise_response(coap_packet_t* req, coap_packet_t* resp, uint8
 }
 
 
-void Coap::coap_register_con_msg(IPAddress ip, uint16_t port, uint16_t mid, uint8_t* buf, uint8_t size, uint8_t tries)
+void Coap::coap_register_con_msg(IPAddress ip, uint16_t port, uint16_t mid, uint8_t* buf,
+								 uint8_t size, uint8_t tries)
 {
 	if(_retransmit_slot_counter < CONF_MAX_RETRANSMIT_SLOTS) {
 		uint8_t i = _retransmit_slot_counter;
@@ -414,31 +415,27 @@ void Coap::coap_register_con_msg(IPAddress ip, uint16_t port, uint16_t mid, uint
 			Serial.print(" for message ");
 			Serial.println(_retransmit[i]->mid);
 			//Serial.println("Registered con msg ");
-		)
+		   )
 	} else DBG(Serial.println("Failed to register con msg ");)
-	return;
+		return;
 }
 
 
 uint8_t Coap::coap_unregister_con_msg(uint16_t mid, uint8_t flag)
 {
 	uint8_t i = 0;
+
 	while(i < _retransmit_slot_counter) {
 		if(_retransmit[i]->mid == mid) {
-			if(flag == 1) {
-				DBG(Serial.print("Freed RETRANSMIT slot ");
-					Serial.print(i);
-					Serial.print(" for message ");
-					Serial.println(_retransmit[i]->mid);
-					//Serial.println("Unregistered con msg");
-				)
-				freeRetransmitSlot(_retransmit[i], i);
-				return 0;
-			} else {
-				_retransmit[i]->reg = 0;
-				DBG(Serial.println("Resetted con msg");)
-				return 0x0F & _retransmit[i]->timeout_and_tries;
-			}
+			DBG(Serial.print("Freed RETRANSMIT slot ");
+				Serial.print(i);
+				Serial.print(" for message ");
+				Serial.println(_retransmit[i]->mid);
+				//Serial.println("Unregistered con msg");
+			   )
+			uint8_t ret_value = 0x0F & _retransmit[i]->timeout_and_tries;
+			freeRetransmitSlot(_retransmit[i], i);
+			return ret_value;
 		}
 		i++;
 	}
@@ -460,16 +457,16 @@ void Coap::coap_retransmit_loop(void)
 				_timeoutfactor = _timeoutfactor << (0x0F & _retransmit[i]->timeout_and_tries);
 				// ARDUINO
 				//DBG(mySerial_->println("_retransmit"));
-				udp_send(_retransmit[i]->ip, _retransmit[i]->port, _retransmit[i]->packet,
-						 _retransmit[i]->size);
+				udp_send(_retransmit[i]->ip, _retransmit[i]->port,
+						 _retransmit[i]->packet, _retransmit[i]->size);
 				//_ethudp->beginPacket(_retransmit[i]->ip, _retransmit[i]->port);
 				//_ethudp->write(_retransmit[i]->packet, _retransmit[i]->size);
 				//_ethudp->endPacket();
 
 				if((0x0F & _retransmit[i]->timeout_and_tries) == CONF_COAP_MAX_RETRANSMIT_TRIES) {
-					#ifdef ENABLE_OBSERVE
+#ifdef ENABLE_OBSERVE
 					coap_remove_observer(_retransmit[i]->mid);
-					#endif
+#endif
 					coap_unregister_con_msg(_retransmit[i]->mid, 1);
 					return;
 				} else {
@@ -515,7 +512,7 @@ uint8_t Coap::coap_add_observer(coap_packet_t* msg, IPAddress* ip, uint16_t port
 			Serial.print(i);
 			Serial.print(" for resource ");
 			Serial.println(_observer[i]->resource);
-		)
+		   )
 		return(1);
 	}
 	return(0);
@@ -531,7 +528,7 @@ void Coap::coap_remove_observer(uint16_t mid)
 				Serial.print(i);
 				Serial.print(" for resource ");
 				Serial.println(_observer[i]->resource);
-			)
+			   )
 			freeObserverSlot(_observer[i], i);
 			return;
 		}
