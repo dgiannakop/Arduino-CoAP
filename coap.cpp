@@ -323,8 +323,10 @@ void Coap::coap_send(coap_packet_t* msg, IPAddress dest, uint16_t port)
 {
 	memset(_send_buffer, 0, CONF_MAX_MSG_LEN);
 	uint8_t data_len = msg->packet_to_buffer(_send_buffer);
-	if((msg->type_w() == CON)) {
+	if((msg->type_w() == CON && _retransmit_slot_counter < CONF_MAX_RETRANSMIT_SLOTS)) {
 		coap_register_con_msg(dest, port, msg->mid_w(), _send_buffer, data_len, 0);
+	} else {
+		msg->set_type(NON);
 	}
 	DBG(Serial.print("Sending to ");
 		Serial.print(dest);
@@ -332,9 +334,6 @@ void Coap::coap_send(coap_packet_t* msg, IPAddress dest, uint16_t port)
 		Serial.println(port);
 	   )
 	udp_send(dest, port, _send_buffer, data_len);
-	//_ethudp->beginPacket(dest, port);
-	//_ethudp->write(_send_buffer, data_len);
-	//_ethudp->endPacket();
 	//DBG(debug_msg(_sendBuffer, data_len));
 }
 
@@ -393,7 +392,7 @@ int Coap::coap_blockwise_response(coap_packet_t* req, coap_packet_t* resp, uint8
 }
 
 
-void Coap::coap_register_con_msg(IPAddress ip, uint16_t port, uint16_t mid, uint8_t* buf,
+uint8_t Coap::coap_register_con_msg(IPAddress ip, uint16_t port, uint16_t mid, uint8_t* buf,
 								 uint8_t size, uint8_t tries)
 {
 	if(_retransmit_slot_counter < CONF_MAX_RETRANSMIT_SLOTS) {
@@ -416,8 +415,11 @@ void Coap::coap_register_con_msg(IPAddress ip, uint16_t port, uint16_t mid, uint
 			Serial.println(_retransmit[i]->mid);
 			//Serial.println("Registered con msg ");
 		   )
-	} else DBG(Serial.println("Failed to register con msg ");)
-		return;
+		return(1);
+	} else {
+		DBG(Serial.println("Failed to register con msg ");)
+		return(0);
+	}
 }
 
 
@@ -459,9 +461,6 @@ void Coap::coap_retransmit_loop(void)
 				//DBG(mySerial_->println("_retransmit"));
 				udp_send(_retransmit[i]->ip, _retransmit[i]->port,
 						 _retransmit[i]->packet, _retransmit[i]->size);
-				//_ethudp->beginPacket(_retransmit[i]->ip, _retransmit[i]->port);
-				//_ethudp->write(_retransmit[i]->packet, _retransmit[i]->size);
-				//_ethudp->endPacket();
 
 				if((0x0F & _retransmit[i]->timeout_and_tries) == CONF_COAP_MAX_RETRANSMIT_TRIES) {
 #ifdef ENABLE_OBSERVE
@@ -587,7 +586,8 @@ void Coap::coap_notify()
 			_observer[i]->timestamp = millis() + 10000;
 			// send msg
 			notification.init();
-			notification.set_type(CON);
+			if(_retransmit_slot_counter < CONF_MAX_RETRANSMIT_SLOTS) notification.set_type(CON);
+			else notification.set_type(NON);
 			notification.set_mid(coap_new_mid());
 
 			notification.set_code(_resource[resource_id].execute(COAP_GET, NULL, 0, _large_buffer,
@@ -603,16 +603,15 @@ void Coap::coap_notify()
 			notification.set_payload(_large_buffer);
 			notification.set_payload_len(output_data_len);
 			notification_size = notification.packet_to_buffer(_send_buffer);
-			coap_register_con_msg(_observer[i]->ip, _observer[i]->port, notification.mid_w(),
-								  _send_buffer, notification_size,
-								  coap_unregister_con_msg(_observer[i]->last_mid, 1)); //FIXME: was 0
+			if(notification.type_w() == CON){
+				coap_register_con_msg(_observer[i]->ip, _observer[i]->port, notification.mid_w(),
+									_send_buffer, notification_size,
+									coap_unregister_con_msg(_observer[i]->last_mid, 1)); //FIXME: was 0
+			}
 			_observer[i]->last_mid= notification.mid_w();
 
 			// ARDUINO
 			udp_send(_observer[i]->ip, _observer[i]->port, _send_buffer, notification_size);
-			//_ethudp->beginPacket(_observer[i]->ip, _observer[i]->port);
-			//_ethudp->write(_send_buffer, notification_size);
-			//_ethudp->endPacket();
 			delay(20);
 		}
 	}

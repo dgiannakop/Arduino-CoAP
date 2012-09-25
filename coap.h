@@ -9,8 +9,6 @@
 #include "packet.h"
 #include "resource.h"
 
-#define DEBUG
-
 #ifdef DEBUG
 	#define DBG(c) c
 	#define P(name) static const prog_uchar name[] PROGMEM
@@ -87,8 +85,8 @@ class Coap {
 		int coap_blockwise_response(coap_packet_t *req, coap_packet_t *resp, uint8_t **data,
 									size_t *data_len);
 
-		void coap_register_con_msg(IPAddress id, uint16_t port, uint16_t mid, uint8_t *buf,
-								   uint8_t size, uint8_t tries);
+		uint8_t coap_register_con_msg(IPAddress id, uint16_t port, uint16_t mid, uint8_t *buf,
+									  uint8_t size, uint8_t tries);
 		uint8_t coap_unregister_con_msg(uint16_t mid, uint8_t flag);
 		void coap_retransmit_loop();
 		//void coap_resource_discovery( size_t *payload_len );
