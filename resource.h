@@ -12,7 +12,7 @@ class CoapResource
 {
    public:
       CoapResource(){};
-      CoapResource( String name, uint8_t methods, my_delegate_t delegate, bool fast_resource, uint16_t notify_time, uint8_t content_type );
+      CoapResource( String name, uint8_t methods, coap_status_t (*delegate) (uint8_t, uint8_t*, size_t, uint8_t*, size_t*, queries_t), bool fast_resource, uint16_t notify_time, uint8_t content_type );
       coap_status_t execute( uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries );
       void set_notify_time( uint16_t notify_time );
       void set_interrupt_flag( bool flag );
@@ -28,7 +28,7 @@ class CoapResource
       bool interrupt_flag_w();
    private:
       bool is_set_;
-      my_delegate_t del_;
+       coap_status_t (*del_) (uint8_t, uint8_t*, size_t, uint8_t*, size_t*, queries_t);
       String name_;
       uint8_t methods_;
       uint16_t notify_time_;

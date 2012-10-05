@@ -112,8 +112,8 @@ coap_status_t CoapPacket::buffer_to_packet( uint8_t len, uint8_t* buf, char* lar
                block2_num_ = get_int_opt_value( current_opt, opt_len );
                block2_more_ = ( block2_num_ & 0x08 ) >> 3;
                block2_size_ = 16 << ( block2_num_ & 0x07 );
-               block2_offset_ = ( block2_num_ & ~0x0F ) << ( block2_num_ & 0x07 );
-               block2_num_ >>= 4;
+               block2_offset_ = (( block2_num_ & 0xF0 ) >>4 )*block2_size_;               
+               block2_num_ = (( block2_num_ & 0xF0 ) >>4 )&0x0F;                              
                break;
             case BLOCK1:
                set_option( BLOCK1 );
@@ -358,6 +358,8 @@ uint8_t CoapPacket::code_w()
 {
    return code_;
 }
+bool CoapPacket::isGET() { return code_w() == GET; }
+
 uint16_t CoapPacket::mid_w()
 {
    return mid_;

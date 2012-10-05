@@ -125,6 +125,7 @@ class CoapPacket
       uint8_t type_w();
       uint8_t opt_count_w();
       uint8_t code_w();
+      bool isGET();
       uint16_t mid_w();
       uint32_t is_option( uint8_t opt );
       uint8_t content_type_w();

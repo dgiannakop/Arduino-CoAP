@@ -2,17 +2,18 @@
 #define VECTOR_H
 
 // Minimal class to replace std::vector
-template<typename Data>
+template<typename Data,int VECTOR_SIZE =10>
 class Vector {
       size_t d_size; // Stores no. of actually stored objects
       size_t d_capacity; // Stores allocated capacity
-      Data d_data[10]; // Stores data
+      
    public:
-      Vector() :
-         d_size( 0 ),
-         d_capacity( 10 )
-         //d_data( 0 )
-      {}; // Default constructor
+   Data d_data[VECTOR_SIZE]; // Stores data
+      Vector() {
+		  d_size=0 ;
+         d_capacity=VECTOR_SIZE;         
+          }; // Default constructor
+      /*
       Vector( Vector const &other ) :
          d_size( other.d_size ),
          d_capacity( other.d_capacity ),
@@ -21,12 +22,12 @@ class Vector {
          memcpy( d_data, other.d_data, d_size * sizeof( Data ) );
 
       }; // Copy constuctor
-
+*/
       ~Vector() {
          free( d_data );
 
       }; // Destructor
-
+/*
       Vector &operator=( Vector const &other ) {
          free( d_data );
          d_size = other.d_size;
@@ -36,13 +37,13 @@ class Vector {
          return *this;
 
       }; // Needed for memory management
-
+*/
       void push_back( Data const &x ) {
          //if ( d_capacity == d_size )
             //resize();
-         d_data[d_size++] = x;
+         d_data[d_size++] = x;          
       }; // Adds new value. If needed, allocates more space
-
+/*
       void remove( int idx ) {
          if ( idx >= d_size ) return;
          if ( idx - 1 != d_size ) {
@@ -52,9 +53,14 @@ class Vector {
          }
          d_size--;
       }; // Adds new value. If needed, allocates more space
+  */    
+      Data  get( int idx ) {
+         if ( idx >= d_size ) return -1;
+         return d_data[idx];
+      }; // Adds new value. If needed, allocates more space
 
       size_t size() const {
-         return d_size;
+         return this->d_size;
 
       }; // Size getter
 
@@ -68,6 +74,7 @@ class Vector {
 
       }; // Changeable getter
    private:
+   /*
       void resize() {
          d_capacity = d_capacity ? d_capacity * 2 : 1;
          Data *newdata = ( Data * )malloc( d_capacity * sizeof( Data ) );
@@ -75,5 +82,6 @@ class Vector {
          free( d_data );
          d_data = newdata;
       };// Allocates double the old space
+      * */
 };
 #endif
