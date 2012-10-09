@@ -14,19 +14,19 @@ void PowerStrip::init(Coap *coap)
 
 	// first we create a delegate for our callback function
 	plug_sensor_d[0] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_sensor_0);
-	coap->add_resource("1/c", GET, plug_sensor_d[0], false, 3, TEXT_PLAIN);
+	coap->add_resource("1/c", GET, plug_sensor_d[0], true, 2, TEXT_PLAIN);
 //
 	plug_sensor_d[1] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_sensor_1);
-	coap->add_resource("2/c", GET, plug_sensor_d[1], false, 3, TEXT_PLAIN);
+	coap->add_resource("2/c", GET, plug_sensor_d[1], true, 2, TEXT_PLAIN);
 //
 	plug_sensor_d[2] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_sensor_2);
-	coap->add_resource("3/c", GET, plug_sensor_d[2], false, 3, TEXT_PLAIN);
+	coap->add_resource("3/c", GET, plug_sensor_d[2], true, 2, TEXT_PLAIN);
 //
 	plug_sensor_d[3] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_sensor_3);
-	coap->add_resource("4/c", GET, plug_sensor_d[3], false, 3, TEXT_PLAIN);
+	coap->add_resource("4/c", GET, plug_sensor_d[3], true, 2, TEXT_PLAIN);
 //
 	plug_sensor_d[4] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_sensor_4);
-	coap->add_resource("5/c", GET, plug_sensor_d[4], false, 3, TEXT_PLAIN);
+	coap->add_resource("5/c", GET, plug_sensor_d[4], true, 2, TEXT_PLAIN);
 
 
 	plug_relay_d[0] = fastdelegate::MakeDelegate(this, &PowerStrip::plug_relay_0);
