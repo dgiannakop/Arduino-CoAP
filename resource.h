@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "packet.h"
+#include "coapSensor.h"
 
 class CoapResource
 {
@@ -13,7 +14,7 @@ class CoapResource
        * Resource Constructor. User to pass as parameters all required fields: 
        *
        */
-      CoapResource( String name, uint8_t methods, coap_status_t (*delegate) (uint8_t, uint8_t*, size_t, uint8_t*, size_t*, queries_t), bool fast_resource, uint16_t notify_time, uint8_t content_type );
+      CoapResource( String name, uint8_t methods, CoapSensor * sensor, bool fast_resource, uint16_t notify_time, uint8_t content_type );
       /**
        * Called when a resouce is to be evaluated again.
        */
@@ -52,7 +53,7 @@ class CoapResource
       bool interrupt_flag_w();
    private:
       bool is_set_;
-       coap_status_t (*del_) (uint8_t, uint8_t*, size_t, uint8_t*, size_t*, queries_t);
+       CoapSensor *del_;
       String name_;
       uint8_t methods_;
       uint16_t notify_time_;

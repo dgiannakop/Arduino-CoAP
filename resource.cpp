@@ -1,10 +1,10 @@
 #include "resource.h"
 
-CoapResource::CoapResource( String name, uint8_t methods, coap_status_t (*delegate) (uint8_t, uint8_t*, size_t, uint8_t*, size_t*, queries_t), bool fast_resource, uint16_t notify_time, uint8_t content_type )
+CoapResource::CoapResource( String name, uint8_t methods, CoapSensor * sensor, bool fast_resource, uint16_t notify_time, uint8_t content_type )
 {
    name_ = name;
    methods_ = methods;
-   del_ = delegate;
+   del_ = sensor;
    is_set_ = true;
    fast_resource_ = fast_resource;
    content_type_ = content_type;
@@ -21,7 +21,7 @@ coap_status_t CoapResource::execute( uint8_t method, uint8_t* input_data, size_t
          method = GET;
       else if (method == COAP_POST)
          method = POST;
-      return del_( method, input_data, input_data_len, output_data, output_data_len, queries );
+      return del_->callback( method, input_data, input_data_len, output_data, output_data_len, queries );
    }
 }
 

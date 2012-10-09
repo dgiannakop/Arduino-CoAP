@@ -6,6 +6,7 @@
 #include "coap_conf.h"
 //#include "vector.h"
 #include "packet.h"
+#include "coapSensor.h"
 
 
 
@@ -47,7 +48,7 @@ class Coap
       void init( XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx );
 #endif
       void handler( void );
-      void add_resource( String name, uint8_t methods,  coap_status_t (*callback) (uint8_t, uint8_t*, size_t, uint8_t*, size_t*, queries_t)  , bool fast_resource, uint16_t notify_time, uint8_t content_type );
+      void add_resource( String name, uint8_t methods,  CoapSensor * sensor  , bool fast_resource, uint16_t notify_time, uint8_t content_type );
       void update_resource( String name, uint8_t methods, bool fast_resource, int notify_time, uint8_t content_type );
       void remove_resource( String name );
       resource_t resource( uint8_t resource_id );
