@@ -2,7 +2,6 @@
 #define coap_h
 
 #include <Arduino.h>
-#include "FastDelegate.h"
 #include <XbeeRadio.h>
 #include "coap_conf.h"
 //#include "vector.h"
@@ -21,7 +20,8 @@ typedef struct observer_t {
 	uint16_t observe_id_;      
 	uint8_t observe_token_len_;
 	uint16_t observe_last_mid_;
-	uint8_t observe_resource_;
+	CoapResource* observe_resource_;
+	uint8_t observe_token_[8];
 	unsigned long observe_timestamp_;
 } ;
 
@@ -62,7 +62,7 @@ class Coap
       void receiver( uint8_t*, uint16_t, uint8_t );
       void coap_send( coap_packet_t*, uint16_t );
       uint16_t coap_new_mid();
-      bool find_resource( uint8_t* i, String uri_path );
+      CoapResource* find_resource(  String uri_path );
       //coap_status_t call_resource( uint8_t method, uint8_t resource_id, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries );
       int coap_blockwise_response( coap_packet_t *req, coap_packet_t *resp, uint8_t **data, size_t *data_len );
       void coap_register_con_msg( uint16_t id, uint16_t mid, uint8_t *buf, uint8_t size, uint8_t tries );
@@ -70,7 +70,7 @@ class Coap
       void coap_retransmit_loop();
       //void coap_resource_discovery( size_t *payload_len );
 #ifdef ENABLE_OBSERVE
-      uint8_t coap_add_observer( coap_packet_t *msg, uint16_t *id, uint8_t resource_id );
+      uint8_t coap_add_observer( coap_packet_t *msg, uint16_t *id, CoapResource* resource_id );
       void coap_remove_observer( uint16_t mid );
       void coap_notify_from_timer( );
       void coap_notify_from_interrupt( uint8_t resource_id );
@@ -99,6 +99,9 @@ class Coap
 #endif
       bool broadcasting;
       unsigned long timestamp;
+	  unsigned long last_broadcast;     
+	  char hereiam[8];    
+	  
       // Message ID
       uint16_t mid_;
       // new vector type resources
@@ -125,7 +128,7 @@ class Coap
 
 		observer_t observers[CONF_MAX_OBSERVERS];
       //uint16_t observe_id_[CONF_MAX_OBSERVERS];
-      uint8_t observe_token_[CONF_MAX_OBSERVERS][8];
+      //uint8_t observe_token_[CONF_MAX_OBSERVERS][8];
       //uint8_t observe_token_len_[CONF_MAX_OBSERVERS];
       //uint16_t observe_last_mid_[CONF_MAX_OBSERVERS];
       //uint8_t observe_resource_[CONF_MAX_OBSERVERS];

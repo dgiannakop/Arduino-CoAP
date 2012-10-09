@@ -1,4 +1,5 @@
 #include "resource.h"
+
 CoapResource::CoapResource( String name, uint8_t methods, coap_status_t (*delegate) (uint8_t, uint8_t*, size_t, uint8_t*, size_t*, queries_t), bool fast_resource, uint16_t notify_time, uint8_t content_type )
 {
    name_ = name;
@@ -15,10 +16,11 @@ coap_status_t CoapResource::execute( uint8_t method, uint8_t* input_data, size_t
 {
    if( del_ )
    {
-      if (method == 3)
-         method = 4;
-      else if (method == 4)
-         method = 8;
+	   
+      if (method == COAP_GET)
+         method = GET;
+      else if (method == COAP_POST)
+         method = POST;
       return del_( method, input_data, input_data_len, output_data, output_data_len, queries );
    }
 }

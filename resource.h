@@ -2,25 +2,49 @@
 #define RESOURCE_H
 
 #include <Arduino.h>
-#include "FastDelegate.h"
-#include "vector.h"
 #include "packet.h"
-
-typedef fastdelegate::FastDelegate6<uint8_t, uint8_t*, size_t, uint8_t*, size_t*, queries_t, coap_status_t> my_delegate_t;
 
 class CoapResource
 {
    public:
+		
       CoapResource(){};
+      /**
+       * Resource Constructor. User to pass as parameters all required fields: 
+       *
+       */
       CoapResource( String name, uint8_t methods, coap_status_t (*delegate) (uint8_t, uint8_t*, size_t, uint8_t*, size_t*, queries_t), bool fast_resource, uint16_t notify_time, uint8_t content_type );
+      /**
+       * Called when a resouce is to be evaluated again.
+       */
       coap_status_t execute( uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries );
+      /**
+       * Sets a new notification interval for the current resource.
+       */
       void set_notify_time( uint16_t notify_time );
+	  /**
+	   * Sets the Interupt flag.
+	   * Notes a change in the Resource's value.
+	   */
       void set_interrupt_flag( bool flag );
+	  /**
+	   * 
+	   */
       bool is_set();
+      /**
+       * String representation of the resource's name.
+       */
       String name();
+      /**
+       * Length of the resource's name.
+       */
       uint8_t name_length();
       void nameToStr( char* buf, size_t len );
+      /**
+       * Check if the resource allows the method.
+       */
       uint8_t method_allowed( uint8_t method );
+      
       uint16_t notify_time_w();
       uint8_t resource_len();
       bool fast_resource();
