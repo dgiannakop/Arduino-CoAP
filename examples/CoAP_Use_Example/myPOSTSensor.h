@@ -1,11 +1,10 @@
 #include <coapSensor.h>
 
-class mySensor : 
+class myPOSTSensor : 
 public CoapSensor {
 
-public:
-  //"resGET1" , GET, true, 20, TEXT_PLAIN
-  mySensor(String name , uint8_t method , boolean fast , uint16_t notify_time, uint8_t content_type , int pin){
+public:  
+  myPOSTSensor(String name , uint8_t method , boolean fast , uint16_t notify_time, uint8_t content_type , int pin){
     pin_ = pin;
     name_ = name;
     method_ = method;
@@ -19,15 +18,24 @@ public:
   coap_status_t callback(uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries){
     //Response to the GET request
     if( method == GET )  {
-      if (pin_>=A0){
-        value = analogRead(pin_);
-      }else {
-        value = digitalRead(pin_);
-      }
-      *output_data_len = sprintf( (char*)output_data, "%d", value ); 
+      *output_data_len = sprintf( (char*)output_data, "%s", value?"on":"off" ); 
       return CONTENT;
-    }    
+    }
+    else if (method==POST){
+      
+      if ((char)input_data[0] == 'y'){
+        digitalWrite(pin_,HIGH);
+        value=1;
+      }
+      else if ((char)input_data[0] == 'n'){
+        digitalWrite(pin_,LOW);
+        value=0;
+      }
+      *output_data_len = sprintf( (char*)output_data, "%s", value?"on":"off"  ); 
+      return CHANGED;      
+    }
   }
+
 
   uint8_t method(){
     return method_;

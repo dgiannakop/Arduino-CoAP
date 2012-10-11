@@ -79,13 +79,13 @@ void Coap::handler()
    }
   digitalWrite( 13, LOW );
 }
-void Coap::add_resource( String name, uint8_t methods,  CoapSensor * sensor  , bool fast_resource, uint16_t notify_time, uint8_t content_type )
+void Coap::add_resource( CoapSensor * sensor )
 {
    // remove if this resource is already stored (if we need to update)
    //remove_resource( name );
    // create new resource object
     
-   resources_[rcount++] = resource_t( name, methods, sensor, fast_resource, notify_time, content_type );
+   resources_[rcount++] = resource_t( sensor->name(), sensor->method(), sensor, sensor->fast(), sensor->notify_time(), sensor->content_type() );
    // push it to the vector
    //resources_.push_back( new_resource );
    

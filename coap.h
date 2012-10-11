@@ -48,7 +48,7 @@ class Coap
       void init( XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx );
 #endif
       void handler( void );
-      void add_resource( String name, uint8_t methods,  CoapSensor * sensor  , bool fast_resource, uint16_t notify_time, uint8_t content_type );
+      void add_resource( CoapSensor * sensor );
       void update_resource( String name, uint8_t methods, bool fast_resource, int notify_time, uint8_t content_type );
       void remove_resource( String name );
       resource_t resource( uint8_t resource_id );

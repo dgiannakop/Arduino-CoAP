@@ -18,6 +18,7 @@
 //Include CoAP Libraries
 #include <coap.h>
 #include "mySensor.h"
+#include "myPOSTSensor.h"
 
 //Create the XbeeRadio object we'll be using
 XBeeRadio xbee = XBeeRadio();
@@ -29,13 +30,16 @@ Rx16Response rx = Rx16Response();
 //CoAP object
 Coap coap;
 
-mySensor aSensor = mySensor(5);
+mySensor aSensor = mySensor("resGET1" , GET, true, 20, TEXT_PLAIN,A0);
+myPOSTSensor bSensor = myPOSTSensor("resGET-POST" , GET|POST, true, 20, TEXT_PLAIN,3);
 
 
 //Runs only once
 void setup()
 {
 
+  pinMode(3, OUTPUT);     
+  
   // comment out for debuging
   xbee.initialize_xbee_module();
   //start our XbeeRadio object and set our baudrate to 38400.
@@ -47,7 +51,8 @@ void setup()
   coap.init( &xbee, &response, &rx );
 
   //add the resourse resGET
-  coap.add_resource("resGET"    , GET,  &aSensor  , true, 20, TEXT_PLAIN);
+  coap.add_resource(&aSensor);
+  coap.add_resource(&bSensor);
   //add the resources resGET-POST
   //coap.add_resource("resGET-POST"  , GET | POST, &handlerGET_POST, true, 20, TEXT_PLAIN);
 
