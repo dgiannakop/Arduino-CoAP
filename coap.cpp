@@ -111,7 +111,7 @@ coap_status_t Coap::resource_discovery(uint8_t method, uint8_t* input_data, size
 			strcpy(output+index, "<");
 			index++;
 			_resource[i].nameToStr(output+index, _resource[i].name_length()+1);
-			index += _resource[i].name_length()+1;
+			index += _resource[i].name_length();
 
 			strcpy(output+index, ">,");
 			index += 2;
