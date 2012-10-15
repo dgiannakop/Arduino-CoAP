@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include "packet.h"
-#include "coapSensor.h"
+#include "CoapSensor.h"
 
 class CoapResource
 {
@@ -53,7 +53,7 @@ class CoapResource
       bool interrupt_flag_w();
    private:
       bool is_set_;
-       CoapSensor *del_;
+      CoapSensor *del_;
       String name_;
       uint8_t methods_;
       uint16_t notify_time_;

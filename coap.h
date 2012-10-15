@@ -6,7 +6,7 @@
 #include "coap_conf.h"
 //#include "vector.h"
 #include "packet.h"
-#include "coapSensor.h"
+#include "CoapSensor.h"
 
 
 
