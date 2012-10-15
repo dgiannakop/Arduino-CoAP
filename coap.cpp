@@ -85,7 +85,7 @@ void Coap::add_resource( CoapSensor * sensor )
    //remove_resource( name );
    // create new resource object
     
-   resources_[rcount++] = resource_t( sensor->get_name(), sensor->get_method(), sensor, sensor->get_fast(), sensor->get_notify_time(), sensor->get_content_type() );
+   resources_[rcount++] = resource_t( sensor );
    // push it to the vector
    //resources_.push_back( new_resource );
    
