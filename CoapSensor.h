@@ -50,7 +50,7 @@ private:
 	uint8_t disable_method(uint8_t method)
 	{
 		uint8_t tempmethod = this->get_method();
-		tempmethod = tempmethod & (!method);
+		tempmethod = tempmethod & (~method);
 		this->set_method(tempmethod);
 	}
 };
