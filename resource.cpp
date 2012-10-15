@@ -1,14 +1,9 @@
 #include "resource.h"
 
-CoapResource::CoapResource( String name, uint8_t methods, CoapSensor * sensor, bool fast_resource, uint16_t notify_time, uint8_t content_type )
+CoapResource::CoapResource( CoapSensor * sensor )
 {
-   //name_ = name;
-   //methods_ = methods;
    del_ = sensor;
    is_set_ = true;
-   //fast_resource_ = fast_resource;
-   //content_type_ = content_type;
-   //notify_time_ = notify_time;
    interrupt_flag_ = false;
 }
 
@@ -43,7 +38,6 @@ bool CoapResource::is_set()
 
 String CoapResource::name()
 {
-   //return name_;
     return del_->get_name();
 }
 

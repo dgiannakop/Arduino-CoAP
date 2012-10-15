@@ -84,14 +84,12 @@ void Coap::add_resource( CoapSensor * sensor )
    // remove if this resource is already stored (if we need to update)
    //remove_resource( name );
    // create new resource object
-
 	size_t output_data_len;
 	sensor->get_value(helperBuf_, 1, helperBuf_, &output_data_len);
 	sensor->set_value(helperBuf_, 1, helperBuf_, &output_data_len);
-	resources_[rcount++] = resource_t( sensor->get_name(), sensor->get_method(), sensor, sensor->get_fast(), sensor->get_notify_time(), sensor->get_content_type() );
+  resources_[rcount++] = resource_t( sensor );
    // push it to the vector
    //resources_.push_back( new_resource );
-   
 }
 
 void Coap::update_resource( String name, uint8_t methods, bool fast_resource, int notify_time, uint8_t content_type )
