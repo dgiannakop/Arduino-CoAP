@@ -54,12 +54,12 @@ class CoapResource
    private:
       bool is_set_;
       CoapSensor *del_;
-      String name_;
-      uint8_t methods_;
-      uint16_t notify_time_;
-      bool fast_resource_;
-      uint8_t resource_len_;
-      uint8_t content_type_;
+      //String name_;
+      //uint8_t methods_;
+      //uint16_t notify_time_;
+      //bool fast_resource_;
+      //uint8_t resource_len_;
+      //uint8_t content_type_;
       bool interrupt_flag_;
 };
 #endif
