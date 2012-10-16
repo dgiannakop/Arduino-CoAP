@@ -7,11 +7,19 @@ class CoapSensor
 public:
 	CoapSensor()
 	{
-		this->init("unknown", true, 20, TEXT_PLAIN);
+		this->set_method(GET|POST);
+		this->set_name("unknown");
+		this->set_fast(true);
+		this->set_notify_time(20);
+		this->set_content_type(TEXT_PLAIN);
 	}
 	CoapSensor(String name)
 	{
-		this->init(name, true, 20, TEXT_PLAIN);
+		this->set_method(GET|POST);
+		this->set_name(name);
+		this->set_fast(true);
+		this->set_notify_time(20);
+		this->set_content_type(TEXT_PLAIN);
 	}
 
 	void init(String name, bool fast, uint16_t notify_time, uint8_t content_type)
