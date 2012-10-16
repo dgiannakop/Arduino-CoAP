@@ -41,6 +41,11 @@ void Coap::init( XBeeRadio *xbee, XBeeRadioResponse *response, Rx16Response *rx 
    //register built-in resource discovery resource
    
 	//resources_[rcount++] = resource_t( ".well-known/core", GET, &Coap::resource_discovery, true, 0, APPLICATION_LINK_FORMAT );
+#ifdef ENABLE_OBSERVE
+	for( int i = 0; i < CONF_MAX_OBSERVERS; i++ ){
+		observers[i].observe_resource_=NULL;
+	}
+#endif
 
    xbee_ = xbee;
    response_ = response;
@@ -543,11 +548,11 @@ void Coap::coap_retransmit_loop( void )
 }
 
 #ifdef ENABLE_OBSERVE
-uint8_t Coap::coap_add_observer( coap_packet_t *msg, uint16_t *id, CoapResource* resource_id ){
+uint8_t Coap::coap_add_observer( coap_packet_t *msg, uint16_t *id, CoapResource* resource ){
     
    for( uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++ ){
       
-      if ( ( observers[i].observe_id_ == *id ) && ( observers[i].observe_resource_== resource_id ) ){
+      if ( ( observers[i].observe_id_ == *id ) && ( observers[i].observe_resource_== resource ) ){
          //update token
          memset( observers[i].observe_token_, 0, observers[i].observe_token_len_ );
          observers[i].observe_token_len_ = msg->token_len_w();
@@ -558,10 +563,10 @@ uint8_t Coap::coap_add_observer( coap_packet_t *msg, uint16_t *id, CoapResource*
 		  observers[i].observe_id_ = *id;
 		  observers[i].observe_token_len_ = msg->token_len_w();
 		  memcpy( observers[i].observe_token_, msg->token_w(), msg->token_len_w() );
-		  observers[i].observe_resource_ = resource_id;
+		  observers[i].observe_resource_ = resource;
 		  observers[i].observe_last_mid_ = msg->mid_w();
 		  // ARDUINO
-//		  observers[i].observe_timestamp_ = millis() + 1000*resources_[resource_id].notify_time_w();
+//		  observers[i].observe_timestamp_ = millis() + 1000*resources_[resource].notify_time_w();
 		  observers[i].observe_timestamp_ = millis() + 1000;
 		  observe_counter_++;
 		  return 1;		  
@@ -590,56 +595,27 @@ void Coap::coap_remove_observer( uint16_t mid )
    }
 }
 
-void Coap::coap_notify_from_timer()
-{
-/*
-   uint8_t rid;
-   for( rid = 0; rid < CONF_MAX_RESOURCES; rid++ )
-   {
-      if ( ( observers[rid].observe_id_ != 0 ) && ( observers[rid].observe_timestamp_ < millis() -60 ) )
-      {
-		  /*
-         if ( resources_[rid].interrupt_flag_w() == true )
-         {
-            resources_[rid].set_interrupt_flag( false );
-            //return;
-         }
-         else
-         {
-            coap_notify( rid );
-         }
-		coap_notify( rid );
-      }
-   }
-   */
-   coap_notify();
-}
-
-void Coap::coap_notify_from_interrupt( uint8_t resource_id )
-{
-   //resources_[resource_id].set_interrupt_flag( true );
-   //coap_notify( resource_id );
-}
-
 void Coap::coap_notify()
 {
-	
    coap_packet_t notification;
    uint8_t notification_size;
    //uint8_t output_data[CONF_LARGE_BUF_LEN];
    size_t output_data_len;
    uint8_t i;
    memset( sendBuf_, 0, CONF_MAX_MSG_LEN );
+   
    for( i = 0; i < CONF_MAX_OBSERVERS; i++ )
    {//233392
+		
+	  if (observers[i].observe_resource_ ==NULL) continue;
 	  observer_t * observer = &(observers[i]); 
-	  if (observer->observe_resource_ <0) continue;
+	  continue;
       CoapResource* resource =observer->observe_resource_;
 	  //if( observers[i].observe_resource_ == resource_id )
       if ( observers[i].observe_timestamp_ < millis() )
       {
    digitalWrite( 2, HIGH );
-		 
+		
 		 observer->observe_timestamp_ = millis() + resource->notify_time_w()*1000;
          // send msg
          notification.init();
@@ -665,8 +641,8 @@ void Coap::coap_notify()
          tx_ = Tx16Request( observer->observe_id_, sendBuf_, notification_size );
          xbee_->send( tx_, 112 );
          delay(20);
-         
-  digitalWrite( 2, LOW );
+        
+		digitalWrite( 2, LOW );
       }
    }
    observe_counter_++;
