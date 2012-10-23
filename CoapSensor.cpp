@@ -56,22 +56,35 @@ coap_status_t CoapSensor::callback( uint8_t method, uint8_t* input_data, size_t 
 	*output_data_len = strlen(bla)+1;
 	if( method == GET )
 	{
-		this->get_value(input_data, input_data_len, output_data, output_data_len);
+		this->get_value(output_data, output_data_len);
 		return CONTENT;
 	}
 	else if (method==POST)
 	{
-		this->set_value(input_data, input_data_len, output_data, output_data_len);
+		this->set_value(input_data, input_data_len);
 		return CHANGED;      
 	}
 }
 
-void CoapSensor::get_value(uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len)
+void CoapSensor::get_value(uint8_t* output_data, size_t* output_data_len)
 {
 	this->disable_method(GET);
 }
 
-void  CoapSensor::set_value(uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len)
+void  CoapSensor::set_value(uint8_t* input_data, size_t input_data_len)
 {
 	this->disable_method(POST);
+}
+
+uint8_t CoapSensor::enable_method(uint8_t method)
+{
+	uint8_t tempmethod = this->get_method();
+	tempmethod = tempmethod | method;
+	this->set_method(tempmethod);
+}
+uint8_t CoapSensor::disable_method(uint8_t method)
+{
+	uint8_t tempmethod = this->get_method();
+	tempmethod = tempmethod & (~method);
+	this->set_method(tempmethod);
 }

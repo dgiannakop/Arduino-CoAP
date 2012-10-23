@@ -56,7 +56,7 @@ void Coap::handler()
 {
    if ( timestamp <= millis() - 60 )
    {
-   digitalWrite( 13, HIGH );
+  digitalWrite( 13, HIGH );
       // for testing
 
       // broadcast every 1000ms
@@ -70,6 +70,7 @@ void Coap::handler()
     
       #ifdef ENABLE_OBSERVE
       // notify observers
+
 		coap_notify();
       #endif
       // retransmit if needed
@@ -90,8 +91,8 @@ void Coap::add_resource( CoapSensor * sensor )
    //remove_resource( name );
    // create new resource object
 	size_t output_data_len;
-	sensor->get_value(helperBuf_, 1, helperBuf_, &output_data_len);
-	sensor->set_value(helperBuf_, 1, helperBuf_, &output_data_len);
+	sensor->get_value(helperBuf_, &output_data_len);
+	sensor->set_value(helperBuf_, 1);
   resources_[rcount++] = resource_t( sensor );
    // push it to the vector
    //resources_.push_back( new_resource );
