@@ -76,6 +76,8 @@ void  CoapSensor::set_value(uint8_t* input_data, size_t input_data_len, uint8_t*
 	this->disable_method(POST);
 }
 
+void CoapSensor::check(void){}
+
 uint8_t CoapSensor::enable_method(uint8_t method)
 {
 	uint8_t tempmethod = this->get_method();
