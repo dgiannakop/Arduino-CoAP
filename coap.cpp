@@ -68,6 +68,9 @@ void Coap::handler()
 	}
  delay( 50 );
     
+      //call every sensor's check function to update their data
+      coap_check();
+
       #ifdef ENABLE_OBSERVE
       // notify observers
 
@@ -92,7 +95,7 @@ void Coap::add_resource( CoapSensor * sensor )
    // create new resource object
 	size_t output_data_len;
 	sensor->get_value(helperBuf_, &output_data_len);
-	sensor->set_value(helperBuf_, 1);
+	sensor->set_value(helperBuf_, 1, helperBuf_, &output_data_len);
   resources_[rcount++] = resource_t( sensor );
    // push it to the vector
    //resources_.push_back( new_resource );
@@ -668,4 +671,13 @@ void Coap::debug_msg( uint8_t* msg, uint8_t len )
       DBG( mySerial_->print( msg[i], HEX ) );
    }
    DBG( mySerial_->println( " end" ) );
+}
+
+void Coap::coap_check(void)
+{
+	int i;
+	for(i = 0; i < rcount; i++)
+	{
+		resources_[i].check();
+	}
 }

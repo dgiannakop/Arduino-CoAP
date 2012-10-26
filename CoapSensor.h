@@ -36,8 +36,9 @@ public:
 	bool set_fast(bool fast);
 	uint16_t set_notify_time(uint16_t notify_time);
 	uint8_t set_content_type(uint8_t content_type);
+	virtual void check(void);
 	virtual void get_value(uint8_t* output_data, size_t* output_data_len);
-	virtual void set_value(uint8_t* input_data, size_t input_data_len);
+	virtual void set_value(uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len);
 private:
 	String name;
 	bool fast;
