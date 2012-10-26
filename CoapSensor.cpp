@@ -61,7 +61,7 @@ coap_status_t CoapSensor::callback( uint8_t method, uint8_t* input_data, size_t 
 	}
 	else if (method==POST)
 	{
-		this->set_value(input_data, input_data_len);
+		this->set_value(input_data, input_data_len, output_data, output_data_len);
 		return CHANGED;      
 	}
 }
@@ -71,7 +71,7 @@ void CoapSensor::get_value(uint8_t* output_data, size_t* output_data_len)
 	this->disable_method(GET);
 }
 
-void  CoapSensor::set_value(uint8_t* input_data, size_t input_data_len)
+void  CoapSensor::set_value(uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len)
 {
 	this->disable_method(POST);
 }

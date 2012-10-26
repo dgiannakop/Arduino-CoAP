@@ -92,7 +92,7 @@ void Coap::add_resource( CoapSensor * sensor )
    // create new resource object
 	size_t output_data_len;
 	sensor->get_value(helperBuf_, &output_data_len);
-	sensor->set_value(helperBuf_, 1);
+	sensor->set_value(helperBuf_, 1, helperBuf_, &output_data_len);
   resources_[rcount++] = resource_t( sensor );
    // push it to the vector
    //resources_.push_back( new_resource );
