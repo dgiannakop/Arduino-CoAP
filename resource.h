@@ -9,7 +9,7 @@ class CoapResource
 {
    public:
 		
-      CoapResource(){};
+      CoapResource();
       /**
        * Resource Constructor. User to pass as parameters all required fields: 
        *
@@ -24,10 +24,10 @@ class CoapResource
        */
       void set_notify_time( uint16_t notify_time );
 	  /**
-	   * Sets the Interupt flag.
-	   * Notes a change in the Resource's value.
-	   */
-      void set_interrupt_flag( bool flag );
+       * True if sensor value has changed.
+       */
+      bool is_changed();
+      void mark_notified();
 	  /**
 	   * 
 	   */
@@ -49,8 +49,8 @@ class CoapResource
       uint16_t notify_time_w();
       uint8_t resource_len();
       bool fast_resource();
-      uint8_t content_type();
-      bool interrupt_flag_w();
+      uint8_t content_type();      
+      
    private:
       bool is_set_;
       CoapSensor *del_;

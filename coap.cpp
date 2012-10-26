@@ -596,60 +596,53 @@ void Coap::coap_remove_observer( uint16_t mid )
    }
 }
 
-void Coap::coap_notify()
-{
-   coap_packet_t notification;
-   uint8_t notification_size;
-   //uint8_t output_data[CONF_LARGE_BUF_LEN];
-   size_t output_data_len;
-   uint8_t i;
-   memset( sendBuf_, 0, CONF_MAX_MSG_LEN );
-   
-   for( i = 0; i < CONF_MAX_OBSERVERS; i++ )
-   {//233392
+void Coap::coap_notify(){   
+	for(int i = 0; i < CONF_MAX_OBSERVERS; i++ ){
 		
-	  if (observers[i].observe_resource_ ==NULL) continue;
-	  observer_t * observer = &(observers[i]); 
-	  continue;
-      CoapResource* resource =observer->observe_resource_;
-	  //if( observers[i].observe_resource_ == resource_id )
-      if ( observers[i].observe_timestamp_ < millis() )
-      {
-   digitalWrite( 2, HIGH );
+		if (observers[i].observe_resource_ ==NULL) continue;
 		
-		 observer->observe_timestamp_ = millis() + resource->notify_time_w()*1000;
-         // send msg
-         notification.init();
-         notification.set_type( CON );
-         notification.set_mid( coap_new_mid() );
+		observer_t * observer = &(observers[i]); 
+		CoapResource* resource =observer->observe_resource_;
+		
+		if ( (observers[i].observe_timestamp_ < millis() ) || (resource->is_changed()) ){
+			coap_packet_t notification;
+			uint8_t notification_size;
+			//uint8_t output_data[CONF_LARGE_BUF_LEN];
+			size_t output_data_len;		
+			memset( sendBuf_, 0, CONF_MAX_MSG_LEN );
+			observer->observe_timestamp_ = millis() + resource->notify_time_w()*1000;
+			
+			// send msg
+			notification.init();
+			notification.set_type( CON );
+			notification.set_mid( coap_new_mid() );
 
-         notification.set_code( resource->execute( COAP_GET, NULL, 0, output_data, &output_data_len, notification.uri_queries_w() ) );
-         notification.set_option( CONTENT_TYPE );
-         notification.set_content_type( resource->content_type() );
-         notification.set_option( TOKEN );
-         notification.set_token_len( observer->observe_token_len_ );
-         notification.set_token( observer->observe_token_ );
-         notification.set_option( OBSERVE );
-         notification.set_observe( observe_counter_ );
+			notification.set_code( resource->execute( COAP_GET, NULL, 0, output_data, &output_data_len, notification.uri_queries_w() ) );
+			notification.set_option( CONTENT_TYPE );
+			notification.set_content_type( resource->content_type() );
+			notification.set_option( TOKEN );
+			notification.set_token_len( observer->observe_token_len_ );
+			notification.set_token( observer->observe_token_ );
+			notification.set_option( OBSERVE );
+			notification.set_observe( observe_counter_ );
 
-         notification.set_payload( output_data );
-         notification.set_payload_len( output_data_len );
-         notification_size = notification.packet_to_buffer( sendBuf_ );
-         coap_register_con_msg( observers[i].observe_id_, notification.mid_w(), sendBuf_, notification_size, coap_unregister_con_msg( observer->observe_last_mid_, 0 ) );
-         observer->observe_last_mid_= notification.mid_w();
-         
-         // ARDUINO
-         tx_ = Tx16Request( observer->observe_id_, sendBuf_, notification_size );
-         xbee_->send( tx_, 112 );
-         delay(20);
-        
-		digitalWrite( 2, LOW );
-      }
-   }
-   observe_counter_++;
-   //next notification will have greater observe option
-
+			notification.set_payload( output_data );
+			notification.set_payload_len( output_data_len );
+			notification_size = notification.packet_to_buffer( sendBuf_ );
+			coap_register_con_msg( observers[i].observe_id_, notification.mid_w(), sendBuf_, notification_size, coap_unregister_con_msg( observer->observe_last_mid_, 0 ) );
+			observer->observe_last_mid_= notification.mid_w();
+			resource->mark_notified();
+			
+			// ARDUINO
+			tx_ = Tx16Request( observer->observe_id_, sendBuf_, notification_size );
+			xbee_->send( tx_, 112 );
+			delay(20);
+		}
+	}
+	//next notification will have greater observe option
+	observe_counter_++;
 }
+
 /*uint16_t Coap::observe_counter()
 {
    return observe_counter_;

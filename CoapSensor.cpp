@@ -88,3 +88,11 @@ uint8_t CoapSensor::disable_method(uint8_t method)
 	tempmethod = tempmethod & (~method);
 	this->set_method(tempmethod);
 }
+bool CoapSensor::is_changed()
+{
+	return changed;
+}
+
+void CoapSensor::mark_notified(){
+	changed=false;
+}
