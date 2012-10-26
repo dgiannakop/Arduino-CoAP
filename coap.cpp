@@ -68,6 +68,9 @@ void Coap::handler()
 	}
  delay( 50 );
     
+      //call every sensor's check function to update their data
+      coap_check();
+
       #ifdef ENABLE_OBSERVE
       // notify observers
 
@@ -675,4 +678,13 @@ void Coap::debug_msg( uint8_t* msg, uint8_t len )
       DBG( mySerial_->print( msg[i], HEX ) );
    }
    DBG( mySerial_->println( " end" ) );
+}
+
+void Coap::coap_check(void)
+{
+	int i;
+	for(i = 0; i < rcount; i++)
+	{
+		resources_[i].check();
+	}
 }

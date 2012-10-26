@@ -20,6 +20,11 @@ coap_status_t CoapResource::execute( uint8_t method, uint8_t* input_data, size_t
    }
 }
 
+void CoapResource::check()
+{
+   del_->check();
+}
+
 void CoapResource::set_notify_time( uint16_t notify_time )
 {
 //    notify_time_ = notify_time;

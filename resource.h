@@ -51,6 +51,7 @@ class CoapResource
       bool fast_resource();
       uint8_t content_type();
       bool interrupt_flag_w();
+      void check();
    private:
       bool is_set_;
       CoapSensor *del_;
