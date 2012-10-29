@@ -42,11 +42,12 @@ public:
 private:
 	String name;
 	bool fast;
-	bool changed;
 	uint16_t notify_time;
 	uint8_t content_type, method;
 	uint8_t enable_method(uint8_t method);
 	uint8_t disable_method(uint8_t method);
+protected:
+	bool changed;
 };
 
 #endif
