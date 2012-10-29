@@ -52,11 +52,11 @@ coap_status_t CoapPacket::buffer_to_packet( uint8_t len, uint8_t* buf, char* lar
          {
             case CONTENT_TYPE:
                set_option( CONTENT_TYPE );
-               content_type_ = get_int_opt_value( current_opt, opt_len );
+               content_type_ = get_int_opt_value( current_opt, opt_len, false );
                break;
             case MAX_AGE:
                set_option( MAX_AGE );
-               max_age_ = get_int_opt_value( current_opt, opt_len );
+               max_age_ = get_int_opt_value( current_opt, opt_len, false );
                break;
             case PROXY_URI:
                set_option( PROXY_URI );
@@ -67,14 +67,14 @@ coap_status_t CoapPacket::buffer_to_packet( uint8_t len, uint8_t* buf, char* lar
             case URI_HOST:
                // based on id, not ip-literal
                set_option( URI_HOST );
-               uri_host_ = get_int_opt_value( current_opt, opt_len );
+               uri_host_ = get_int_opt_value( current_opt, opt_len, true );
                break;
             case LOCATION_PATH:
                set_option( LOCATION_PATH );
                break;
             case URI_PORT:
                set_option( URI_PORT );
-               uri_port_ = get_int_opt_value( current_opt, opt_len );
+               uri_port_ = get_int_opt_value( current_opt, opt_len, false );
                break;
             case LOCATION_QUERY:
                set_option( LOCATION_QUERY );
@@ -85,7 +85,7 @@ coap_status_t CoapPacket::buffer_to_packet( uint8_t len, uint8_t* buf, char* lar
                break;
             case OBSERVE:
                set_option( OBSERVE );
-               observe_ = get_int_opt_value( current_opt, opt_len );
+               observe_ = get_int_opt_value( current_opt, opt_len, false );
                break;
             case TOKEN:
                set_option( TOKEN );
@@ -94,7 +94,7 @@ coap_status_t CoapPacket::buffer_to_packet( uint8_t len, uint8_t* buf, char* lar
                break;
             case ACCEPT:
                set_option( ACCEPT );
-               accept_ = get_int_opt_value( current_opt, opt_len );
+               accept_ = get_int_opt_value( current_opt, opt_len, false );
                break;
             case IF_MATCH:
                set_option( IF_MATCH );
@@ -109,11 +109,11 @@ coap_status_t CoapPacket::buffer_to_packet( uint8_t len, uint8_t* buf, char* lar
                break;
             case BLOCK2:
                set_option( BLOCK2 );
-               block2_num_ = get_int_opt_value( current_opt, opt_len );
+               block2_num_ = get_int_opt_value( current_opt, opt_len, false );
                block2_more_ = ( block2_num_ & 0x08 ) >> 3;
                block2_size_ = 16 << ( block2_num_ & 0x07 );
-               block2_offset_ = (( block2_num_ & 0xF0 ) >>4 )*block2_size_;               
-               block2_num_ = (( block2_num_ & 0xF0 ) >>4 )&0x0F;                              
+               block2_offset_ = (( block2_num_ & 0xF0 ) >>4 )*block2_size_;
+               block2_num_ = (( block2_num_ & 0xF0 ) >>4 )&0x0F;
                break;
             case BLOCK1:
                set_option( BLOCK1 );
@@ -254,14 +254,24 @@ uint8_t CoapPacket::set_int_opt_value( uint8_t opt, uint8_t current_delta, uint8
    i += set_opt_header( opt - current_delta, i - start_i, &buf[start_i] );
    return i;
 }
-uint32_t CoapPacket::get_int_opt_value( uint8_t *value, uint16_t length )
-{
+uint32_t CoapPacket::get_int_opt_value( uint8_t *value, uint16_t length, bool hexAscii ) {
    uint32_t var = 0;
    int i = 0;
-   while ( i < length )
-   {
-      var <<= 8;
-      var |= 0xFF & value[i++];
+   while ( i < length ) {
+      if ( hexAscii == false ) {
+         var <<= 8;
+         var |= 0xFF & value[i++];
+      }
+      else {
+         var *= 16;
+         if ( value[i] >= 0x41 && value[i] <= 0x5a )
+            var += value[i] - 0x41 + 10;
+         else if ( value[i] >= 0x61 && value[i] <= 0x7a )
+            var += value[i] - 0x61 + 10;
+         else if ( value[i] >= 0x30 && value[i] <= 0x39 )
+            var += value[i] - 0x30;
+         i++;
+      }
    }
    return var;
 }
