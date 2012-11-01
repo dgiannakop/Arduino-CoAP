@@ -172,7 +172,7 @@ class CoapPacket
       uint8_t add_fence_opt( uint8_t opt, uint8_t *current_delta, uint8_t *buf );
       uint8_t set_opt_header( uint8_t delta, size_t len, uint8_t *buf );
       uint8_t set_int_opt_value( uint8_t opt, uint8_t current_delta, uint8_t *buf, uint32_t value );
-      uint32_t get_int_opt_value( uint8_t *value, uint16_t length, bool hexAscii);
+      uint16_t get_int_opt_value( uint8_t *value, uint16_t length, bool hexAscii);
       void merge_options( char **dst, size_t *dst_len, uint8_t *value, uint16_t length, char seperator );
       void make_uri_query( uint8_t* value, uint16_t length, char* largeBuf );
       uint8_t split_option( uint8_t opt, uint8_t current_delta, uint8_t* buf, char* seperator );

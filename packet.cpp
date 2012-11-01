@@ -254,8 +254,8 @@ uint8_t CoapPacket::set_int_opt_value( uint8_t opt, uint8_t current_delta, uint8
    i += set_opt_header( opt - current_delta, i - start_i, &buf[start_i] );
    return i;
 }
-uint32_t CoapPacket::get_int_opt_value( uint8_t *value, uint16_t length, bool hexAscii ) {
-   uint32_t var = 0;
+uint16_t CoapPacket::get_int_opt_value( uint8_t *value, uint16_t length, bool hexAscii ) {
+   uint16_t var = 0;
    int i = 0;
    while ( i < length ) {
       if ( hexAscii == false ) {

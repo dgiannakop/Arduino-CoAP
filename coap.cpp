@@ -153,8 +153,8 @@ coap_status_t Coap::resource_discovery( uint8_t method, uint8_t* input_data, siz
 		//output.concat(resources_[i].name());
 		//output.concat(">,");
 		}
-      
-      
+
+
       //int strlen = output.length();
       //int strlen = resources_str.length() ;
       // print it to char array
@@ -220,8 +220,16 @@ void Coap::receiver( uint8_t* buf, uint16_t from, uint8_t len )
    }
    if ( coap_error_code == NO_ERROR )
    {
+
+	  uint16_t address = xbee_->myAddress;
+	  uint8_t * bit = ((uint8_t*)&address);
+	  uint8_t mbyte= bit[1];
+	  uint8_t lbyte= bit[0];
+	  bit[0]=mbyte;
+	  bit[1]=lbyte;
+	   
       // if URI_HOST is set and the HOST doesn't much this host, reject the message
-      if ( ( msg.is_option( URI_HOST ) ) && ( msg.uri_host_w() != xbee_->myAddress ) )
+      if ( ( msg.is_option( URI_HOST ) ) && ( msg.uri_host_w() != address  ) )
       {
          return;
       }
