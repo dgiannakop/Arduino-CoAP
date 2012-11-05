@@ -635,7 +635,8 @@ void Coap::coap_notify(){
 			notification.set_token_len( observer->observe_token_len_ );
 			notification.set_token( observer->observe_token_ );
 			notification.set_option( OBSERVE );
-			notification.set_observe( observe_counter_ );
+			//next notification will have greater observe option
+			notification.set_observe( observe_counter_++ );
 
 			notification.set_payload( output_data );
 			notification.set_payload_len( output_data_len );
@@ -650,8 +651,8 @@ void Coap::coap_notify(){
 			delay(20);
 		}
 	}
-	//next notification will have greater observe option
-	observe_counter_++;
+	
+	
 }
 
 /*uint16_t Coap::observe_counter()
