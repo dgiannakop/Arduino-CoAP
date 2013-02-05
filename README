@@ -2,7 +2,7 @@ Basic CoAP library for arduino.
 Communication based on XbeeRadio https://github.com/mksense/mac/tree/master/xbee/arduino
 
 ***************************
-* Master branch is working
+* This branch is working as an implementation of the 8th version of the CoAP protocol.
 
 * In this branch many things have changed:
    - resource class revamped
@@ -14,7 +14,6 @@ Communication based on XbeeRadio https://github.com/mksense/mac/tree/master/xbee
    - apps are now easier to use coap library, with less code needed
 
 * Not fully tested
-   - blockwise responses are not working correctly
    - uri queries are not tested
 
 * Current TODO list:
