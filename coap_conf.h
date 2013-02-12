@@ -1,9 +1,9 @@
 #define WISELIB_MID_COAP                    51
 // end of wiselib defines
 // CONFIGURATION
-#define CONF_LARGE_BUF_LEN                  110
-#define CONF_HELPER_BUF_LEN                 64
 #define CONF_MAX_RESOURCES                  10
+#define CONF_LARGE_BUF_LEN                  CONF_MAX_RESOURCES*10
+#define CONF_HELPER_BUF_LEN                 CONF_MAX_RESOURCES*10
 #define CONF_MAX_RESOURCE_QUERIES           1
 #define CONF_MAX_OBSERVERS                  10
 #define CONF_MAX_MSG_LEN                    99
