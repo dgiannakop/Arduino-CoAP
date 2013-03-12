@@ -12,20 +12,27 @@ void Coap::init(EthernetClass* ethernet, EthernetUDP* ethudp) {
 
     /*register built-in resource discovery resource */
     _resource_counter = 0;
+    
+    _observe_counter = 1;
+    _observer_slot_counter = 0;
+#ifdef ENABLE_OBSERVE
+    for (int i = 0; i < CONF_MAX_OBSERVERS; i++) {
+        _observer[i].resource = NULL;
+    }
+#endif
+    
     //_resource[_resource_counter] = resource_t(".well-known/core", GET, delegate, true, 0, APPLICATION_LINK_FORMAT);
     //_resource_counter++;
 
     _retransmit_slot_counter = 0;
     _retransmit = (retransmit_t**) malloc(CONF_MAX_RETRANSMIT_SLOTS * sizeof (retransmit_t*));
 
-    _observe_counter = 1;
-    _observer_slot_counter = 0;
-    _observer = (observer_t**) malloc(CONF_MAX_OBSERVERS * sizeof (observer_t*));
+//    _observer = (observer_t**) malloc(CONF_MAX_OBSERVERS * sizeof (observer_t*));
 
-    _packet_buffer = (uint8_t*) malloc(UDP_TX_PACKET_MAX_SIZE * sizeof (uint8_t));
-    _helper_buffer = (uint8_t*) malloc(CONF_HELPER_BUF_LEN * sizeof (uint8_t));
-    _send_buffer = (uint8_t*) malloc(CONF_MAX_MSG_LEN * sizeof (uint8_t));
-    _large_buffer = (uint8_t*) malloc(CONF_LARGE_BUF_LEN * sizeof (uint8_t));
+    //_packet_buffer = (uint8_t*) malloc(UDP_TX_PACKET_MAX_SIZE * sizeof (uint8_t));
+    //_helper_buffer = (uint8_t*) malloc(CONF_HELPER_BUF_LEN * sizeof (uint8_t));
+    //_send_buffer = (uint8_t*) malloc(CONF_MAX_MSG_LEN * sizeof (uint8_t));
+    //_large_buffer = (uint8_t*) malloc(CONF_LARGE_BUF_LEN * sizeof (uint8_t));
 }
 
 void Coap::handler() {
@@ -40,7 +47,8 @@ void Coap::handler() {
         
         digitalWrite(9, LOW);
         // notify observers
-        coap_notify_from_timer();
+        coap_notify();
+	//coap_notify_from_timer();
         // retransmit if needed
         coap_retransmit_loop();
         
@@ -175,9 +183,9 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
     msg.init();
     response.init();
 
-    memset(_large_buffer, 0, CONF_LARGE_BUF_LEN);
+    //memset(_large_buffer, 0, CONF_LARGE_BUF_LEN);
+    //Serial.println("memset-called");
 
-    Serial.println("memset-called");
     // parse the message
     coap_error_code = msg.buffer_to_packet(len, buf, (char*) _helper_buffer);
     if (msg.version_w() != COAP_VERSION) {
@@ -365,7 +373,7 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
     }
 
     CoapResource* Coap::find_resource(String uri_path) {
-    Serial.println("Coap::find_resource");        
+    Serial.println("Coap::find_resource");
 
     for (int i = 0; i < _resource_counter; i++) {
 	//DBG(mySerial_->println(resources_[*i].name()));
@@ -375,6 +383,7 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
 	    return &(_resource[i]);
 	}
     }
+    Serial.println("Not found");
     return NULL;
 }
 
@@ -499,52 +508,77 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
     //FIXME: It is possible that the we need port to identify each client so we can have many observers
 
     uint8_t Coap::coap_add_observer(coap_packet_t* msg, IPAddress* ip, uint16_t port, CoapResource* resource) {
+		    for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
+
+	if ((_observer[i].resource == resource)) {
+	    //update token
+	    memset(_observer[i].token, 0, _observer[i].token_len);
+	    _observer[i].token_len = msg->token_len_w();
+	    memcpy(_observer[i].token, msg->token_w(), msg->token_len_w());
+	    return 1;
+	}
+	if (_observer[i].resource == NULL) {
+		_observer[i].ip = *ip;
+	    _observer[i].token_len = msg->token_len_w();
+	    memcpy(_observer[i].token, msg->token_w(), msg->token_len_w());
+	    _observer[i].resource = resource;
+	    _observer[i].last_mid = msg->mid_w();
+	    // ARDUINO
+	    //		  observers[i].observe_timestamp_ = millis() + 1000*resources_[resource].notify_time_w();
+	    _observer[i].timestamp = millis() + 1000;
+	    _observer_slot_counter++;
+	    
+		/*
         uint8_t i;
         for (i = 0; i < _observer_slot_counter; i++) {
-            if ((_observer[i]->ip == *ip)
-                    && _observer[i]->port == port && (_observer[i]->resource == resource)) {
+            if ((_observer[i].ip == *ip)
+                    && _observer[i].port == port && (_observer[i].resource == resource)) {
                 //update token
-                memset(_observer[i]->token, 0, _observer[i]->token_len);
-                _observer[i]->token_len = msg->token_len_w();
-                memcpy(_observer[i]->token, msg->token_w(), msg->token_len_w());
+                memset(_observer[i].token, 0, _observer[i].token_len);
+                _observer[i].token_len = msg->token_len_w();
+                memcpy(_observer[i].token, msg->token_w(), msg->token_len_w());
                 return (1);
             }
         }
 
         if (i < CONF_MAX_OBSERVERS) {
             _observer_slot_counter++;
-            _observer[i] = allocateObserverSlot();
-            _observer[i]->ip = *ip;
-            _observer[i]->port = port;
-            _observer[i]->token_len = msg->token_len_w();
-            memcpy(_observer[i]->token, msg->token_w(), msg->token_len_w());
-            _observer[i]->resource = resource;
-            _observer[i]->last_mid = msg->mid_w();
+            //_observer[i] = allocateObserverSlot();
+            _observer[i].ip = *ip;
+            _observer[i].port = port;
+            _observer[i].token_len = msg->token_len_w();
+            memcpy(_observer[i].token, msg->token_w(), msg->token_len_w());
+            _observer[i].resource = resource;
+            _observer[i].last_mid = msg->mid_w();
             // ARDUINO
-            _observer[i]->timestamp = millis() + 30000;
+            _observer[i].timestamp = millis() + 30000;
             DBG(Serial.print("Allocated new OBSERVER slot ");
                     Serial.print(i);
                     Serial.print(" for resource ");
-                    Serial.println(_observer[i]->resource);
+                    Serial.println(_observer[i].resource);
                     )
             return (1);
-        }
-        return (0);
+        }*/
+         return (1);
+	}
+		}
+		return (0);
     }
 
     void Coap::coap_remove_observer(uint16_t mid) {
-        uint8_t i;
+		Serial.println("Removing Observer");
+        /*uint8_t i;
         for (i = 0; i < _observer_slot_counter; i++) {
-            if (_observer[i]->last_mid == mid) {
+            if (_observer[i].last_mid == mid) {
                 DBG(Serial.print("Freed OBSERVER slot ");
                         Serial.print(i);
                         Serial.print(" for resource ");
-                        Serial.println(_observer[i]->resource);
+                        Serial.println(_observer[i].resource);
                         )
-                        freeObserverSlot(_observer[i], i);
+                        //freeObserverSlot(_observer[i], i);
                 return;
             }
-        }
+        }*/
     }
 
     void Coap::coap_notify_from_timer() {
@@ -582,15 +616,16 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
         size_t output_data_len;
         uint8_t i;
 
-        memset(_send_buffer, 0, CONF_MAX_MSG_LEN);
-
-        for (i = 0; i < _observer_slot_counter; i++) {            
-            CoapResource  * resource = _observer[i]->resource;
+        //memset(_send_buffer, 0, CONF_MAX_MSG_LEN);
+        for (i = 0; i < CONF_MAX_OBSERVERS; i++) {
+            CoapResource  * resource = _observer[i].resource;
             if (resource == NULL) continue;
             //if( observers[i].observe_resource_ == resource_id )
-            if (_observer[i]->timestamp < millis()) {
+            if (_observer[i].timestamp < millis()) {
+				Serial.println((char)30+i);
+				memset(_send_buffer, 0, CONF_MAX_MSG_LEN);
 
-                _observer[i]->timestamp = millis() + 10000;
+                _observer[i].timestamp = millis() + 30000;
                 // send msg
                 notification.init();
                 if (_retransmit_slot_counter < CONF_MAX_RETRANSMIT_SLOTS) notification.set_type(CON);
@@ -602,27 +637,33 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
                 notification.set_option(CONTENT_TYPE);
                 notification.set_content_type(resource->content_type());
                 notification.set_option(TOKEN);
-                notification.set_token_len(_observer[i]->token_len);
-                notification.set_token(_observer[i]->token);
+                notification.set_token_len(_observer[i].token_len);
+                notification.set_token(_observer[i].token);
                 notification.set_option(OBSERVE);
                 notification.set_observe(_observe_counter);
 
                 notification.set_payload(_large_buffer);
                 notification.set_payload_len(output_data_len);
                 notification_size = notification.packet_to_buffer(_send_buffer);
+
+/* TODO: reenable
                 if (notification.type_w() == CON) {
-                    coap_register_con_msg(_observer[i]->ip, _observer[i]->port, notification.mid_w(),
+                    coap_register_con_msg(_observer[i].ip, _observer[i].port, notification.mid_w(),
                             _send_buffer, notification_size,
-                            coap_unregister_con_msg(_observer[i]->last_mid, 1)); //FIXME: was 0
+                            coap_unregister_con_msg(_observer[i].last_mid, 1)); //FIXME: was 0
                 }
-                _observer[i]->last_mid = notification.mid_w();
+*/
+
+                _observer[i].last_mid = notification.mid_w();
 
                 // ARDUINO
-                udp_send(_observer[i]->ip, _observer[i]->port, _send_buffer, notification_size);
-                delay(20);
+                udp_send(_observer[i].ip, _observer[i].port, _send_buffer, notification_size);
+		delay(20);
+                _observe_counter++;
+		break;
             }
         }
-        _observe_counter++;
+	//_observe_counter++;
         //next notification will have greater observe option
     }
     /*
@@ -666,20 +707,20 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
         free(slot);
     }
 
-    observer_t * Coap::allocateObserverSlot() {
+    /*observer_t * Coap::allocateObserverSlot() {
         observer_t* new_slot;
         new_slot = (observer_t*) malloc(sizeof (observer_t));
         new_slot->token = (uint8_t*) malloc(8 * sizeof (uint8_t));
         return (new_slot);
-    }
-
+    }*/
+	/*
     void Coap::freeObserverSlot(observer_t* slot, uint8_t indx) {
         free(slot->token);
         free(slot);
         _observer_slot_counter--;
         if (indx != _observer_slot_counter)
             _observer[indx] = _observer[_observer_slot_counter];
-    }
+    }*/
 
     retransmit_t * Coap::allocateRetransmitSlot() {
         retransmit_t* new_slot;
@@ -697,9 +738,9 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
     }
 
     void Coap::coap_check(void) {
+    Serial.println("coap_check");
     int i;
         for (i = 0; i < _resource_counter; i++) {
         	_resource[i].check();
-                Serial.println("Check "+_resource[i].name());
         }
     }

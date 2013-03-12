@@ -52,7 +52,7 @@ struct observer_t {
     IPAddress ip;
     uint16_t port;
 
-    uint8_t* token; //size: 8
+    uint8_t token[8]; //size: 8
     uint8_t token_len;
     uint16_t last_mid;
     CoapResource* resource;
@@ -122,17 +122,18 @@ private:
     //active_requests_t active_requests_;
     //char *largeBuf_;
     /* Internal buffer for any reason */
-    uint8_t* _helper_buffer; //CONF_HELPER_BUF_LEN
+    uint8_t _helper_buffer[CONF_HELPER_BUF_LEN];
     /* Internal buffer for send */
-    uint8_t* _send_buffer; //CONF_MAX_MSG_LEN
+    uint8_t _send_buffer[CONF_MAX_MSG_LEN];
     /* buffer used by the arduino's' udp implementation */
-    uint8_t* _packet_buffer; //UDP_TX_PACKET_MAX_SIZE
+    uint8_t _packet_buffer[UDP_TX_PACKET_MAX_SIZE];
 
-    uint8_t* _large_buffer;
+    uint8_t _large_buffer[CONF_LARGE_BUF_LEN];
 
     /* resource variables */
     uint8_t _resource_counter;
     resource_t _resource[CONF_MAX_RESOURCES];
+    observer_t _observer[CONF_MAX_OBSERVERS];
     //resource_t** _resource; // size: CONF_MAX_RESOURCES
     resource_t* allocateResourceSlot(); // unused
     void freeResourceSlot(resource_t*); // unused
@@ -148,7 +149,6 @@ private:
     /* observer variables */
     uint16_t _observe_counter;
     uint8_t _observer_slot_counter;
-    observer_t** _observer; // size: CONF_MAX_OBSERVERS
     /* observer functions */
     observer_t* allocateObserverSlot();
     void freeObserverSlot(observer_t*, uint8_t indx);
