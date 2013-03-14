@@ -41,7 +41,7 @@ struct retransmit_t {
     uint8_t reg;
     uint8_t timeout_and_tries;
     uint8_t size;
-    uint8_t* packet; //size: CONF_MAX_MSG_LEN
+    uint8_t packet[CONF_MAX_MSG_LEN]; //size: CONF_MAX_MSG_LEN
     unsigned long timestamp;
 };
 
@@ -102,7 +102,6 @@ public:
 #ifdef ENABLE_OBSERVE
     uint8_t coap_add_observer(coap_packet_t *msg, IPAddress* id, uint16_t, CoapResource * sensor);
     void coap_remove_observer(uint16_t mid);
-    void coap_notify_from_timer();
     void coap_notify_from_interrupt(uint8_t resource_id);
     void coap_notify();
     //		uint8_t get_observer_counter();
@@ -141,17 +140,17 @@ private:
     /* retransmit variables */
     unsigned long _timeout;
     uint8_t _retransmit_slot_counter;
-    retransmit_t** _retransmit; // size: CONF_MAX_RETRANSMIT_SLOTS
+    retransmit_t _retransmit[CONF_MAX_RETRANSMIT_SLOTS]; // size: CONF_MAX_RETRANSMIT_SLOTS
     /* retransmit functions */
     retransmit_t* allocateRetransmitSlot();
-    void freeRetransmitSlot(retransmit_t*, uint8_t indx);
+    int freeRetransmitSlot(uint8_t mid);
 
     /* observer variables */
     uint16_t _observe_counter;
     uint8_t _observer_slot_counter;
     /* observer functions */
     observer_t* allocateObserverSlot();
-    void freeObserverSlot(observer_t*, uint8_t indx);
+    void freeObserverSlot(int mid);
 
 #ifdef ENABLE_OBSERVE
     /* Observe variables */
