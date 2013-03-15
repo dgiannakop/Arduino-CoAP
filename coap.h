@@ -41,7 +41,7 @@ struct retransmit_t {
     uint8_t reg;
     uint8_t timeout_and_tries;
     uint8_t size;
-    uint8_t packet[CONF_MAX_MSG_LEN]; //size: CONF_MAX_MSG_LEN
+    uint8_t packet[10];//[CONF_MAX_MSG_LEN/3]; //size: CONF_MAX_MSG_LEN
     unsigned long timestamp;
 };
 
@@ -142,7 +142,7 @@ private:
     uint8_t _retransmit_slot_counter;
     retransmit_t _retransmit[CONF_MAX_RETRANSMIT_SLOTS]; // size: CONF_MAX_RETRANSMIT_SLOTS
     /* retransmit functions */
-    retransmit_t* allocateRetransmitSlot();
+    retransmit_t* allocateRetransmitSlot(int size);
     int freeRetransmitSlot(uint8_t mid);
 
     /* observer variables */

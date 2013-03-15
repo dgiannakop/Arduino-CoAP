@@ -426,7 +426,7 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
 
     uint8_t Coap::coap_register_con_msg(IPAddress ip, uint16_t port, uint16_t mid, uint8_t* buf,
             uint8_t size, uint8_t tries) {
-	retransmit_t * retransmit_slot = allocateRetransmitSlot();
+	retransmit_t * retransmit_slot = allocateRetransmitSlot(size);
 	  if (retransmit_slot!=NULL) {
 	    retransmit_slot->reg = 1;
             retransmit_slot->ip = ip;
@@ -461,7 +461,7 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
         uint8_t _timeoutfactor = 0x01;
         for (i = 0; i < _retransmit_slot_counter; i++) {
             //DBG(mySerial_->println(_retransmit_register_[i]));
-            if (_retransmit[i].reg == 1) {
+            if (_retransmit[i].mid != -1) {
                 // -60 is used because there is always a fault in time
                 if (_retransmit[i].timestamp <= millis() - 60) {
                     _retransmit[i].timeout_and_tries += 1;
@@ -505,7 +505,8 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
       observer_t * new_observer = allocateObserverSlot();
 	
 	if (new_observer != NULL) {
-		new_observer->ip = *ip;
+	    new_observer->ip = *ip;
+	    new_observer->port = port;
 	    new_observer->token_len = msg->token_len_w();
 	    memcpy(new_observer->token, msg->token_w(), msg->token_len_w());
 	    new_observer->resource = resource;
@@ -539,12 +540,12 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
             if (resource == NULL) continue;
             //if( observers[i].observe_resource_ == resource_id )
             if (_observer[i].timestamp < millis()) {
-				Serial.println((char)30+i);
-				memset(_send_buffer, 0, CONF_MAX_MSG_LEN);
+		memset(_send_buffer, 0, CONF_MAX_MSG_LEN);
 
                 _observer[i].timestamp = millis() + 30000;
                 // send msg
                 notification.init();
+		
                 if (_retransmit_slot_counter < CONF_MAX_RETRANSMIT_SLOTS) notification.set_type(CON);
                 else notification.set_type(NON);
                 notification.set_mid(coap_new_mid());
@@ -572,6 +573,7 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
                 _observer[i].last_mid = notification.mid_w();
 
                 // ARDUINO
+		Serial.print("Sending to "+_observer[i].port);
                 udp_send(_observer[i].ip, _observer[i].port, _send_buffer, notification_size);
 		delay(20);
                 _observe_counter++;
@@ -637,7 +639,8 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
 	}
     }
 
-    retransmit_t * Coap::allocateRetransmitSlot() {
+    retransmit_t * Coap::allocateRetransmitSlot(int size) {
+	  if (size>10){return NULL;}
           for (int i = 0; i < CONF_MAX_RETRANSMIT_SLOTS; i++) {
 	    if (_retransmit[i].mid==-1){
 	      _retransmit_slot_counter++;

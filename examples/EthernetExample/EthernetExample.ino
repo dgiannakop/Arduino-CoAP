@@ -8,8 +8,9 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
-byte mac[] = {0xAA, 0xAD, 0xBA, 0xED, 0xFE, 0xED};
-IPAddress ip(150, 140, 5, 122);
+byte mac[] = {
+  0xAA, 0xAD, 0xBA, 0xED, 0xa3, 0xED};
+IPAddress ip(150, 140, 5, 67);
 unsigned int localPort = 5683;      // local port to listen on
 EthernetUDP EthUDP;
 
@@ -19,45 +20,59 @@ EthernetUDP EthUDP;
 #include "PostSensor.h"
 #include "AnalogSensor.h"
 Coap coap;
-
+//#define ALL
 
 //Runs only once
 void setup()
 {
-	DBG(
-            Serial.begin(115200);
-            Serial.println("");
-            Serial.println("Setup...");
-            )
+  DBG(
+  Serial.begin(115200);
+  Serial.println("");
+  Serial.println("Setup...");
+  )
 
-	pinMode(9, OUTPUT);
+    //pinMode(9,OUTPUT);
 
-        //Start UDP server
-	Ethernet.begin(mac,ip);
-	EthUDP.begin(localPort);
 
-        //Init Coap
-	coap.init(&Ethernet, &EthUDP);
 
-        CoapSensor * example_get_resource = new getSensor("getSens");
-        CoapSensor * example_post_resource =new postSensor("postSens");
-        CoapSensor * example_analog_resource = new analogSensor("analogSens",A0);
-        //Add Resources
-        coap.add_resource(example_post_resource);
-        coap.add_resource(example_get_resource);
-        coap.add_resource(example_analog_resource);
-        
-        
-	digitalWrite(9, HIGH);
+  //Start UDP server
+  Ethernet.begin(mac,ip);
+  EthUDP.begin(localPort);
 
-	DBG(
-            Serial.println("Setup...Done!");
-            )
-}
+  delay(10000);
+  //Init Coap
+  coap.init(&Ethernet, &EthUDP);
+    char name[3];  
+     name[1]='S';     name[2]='\0';
+  for (int i=0;i<CONF_MAX_RESOURCES;i++){
+    name[0]=0x30+i;
+    CoapSensor * example_analog_resource11 = new analogSensor(name,A0);
+    coap.add_resource(example_analog_resource11);
+  } 
 
-void loop()
-{
-	// nothing else should be done here. CoAP service is running
-	// if there is a request for your resource, your callback function will be triggered
-	coap.handler();
-}
+
+
+  Serial.println("Setup...Done!");
+
+  DBG(
+  Serial.println("Setup...Done!");
+  )
+  }
+
+  void loop()
+  {
+    // nothing else should be done here. CoAP service is running
+    // if there is a request for your resource, your callback function will be triggered
+    //digitalWrite(9,HIGH);
+    //delay(100);
+    //digitalWrite(9,LOW);
+    coap.handler();
+  }
+
+
+
+
+
+
+
+
