@@ -55,14 +55,15 @@ void Coap::init(EthernetClass* ethernet, EthernetUDP* ethudp) {
 }
 
 void Coap::handler() {
+    coap_check();
+
     if (_timestamp <= millis() - 60) {
         // for testing
         //digitalWrite(9, HIGH);
         // broadcast every 1000ms
         _timestamp = millis() + 1000;
-        delay(50);
+        //delay(50);
         //call every sensor's check function to update their data
-        coap_check();
         
         //digitalWrite(9, LOW);
         // notify observers
