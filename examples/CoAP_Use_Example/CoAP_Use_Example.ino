@@ -17,7 +17,7 @@
 
 //Include CoAP Libraries
 #include <coap.h>
-#include "mySensor.h"
+#include "myGETSensor.h"
 #include "myPOSTSensor.h"
 
 //Create the XbeeRadio object we'll be using
@@ -30,8 +30,8 @@ Rx16Response rx = Rx16Response();
 //CoAP object
 Coap coap;
 
-mySensor aSensor = mySensor("resGET1" , GET, true, 20, TEXT_PLAIN,A0);
-myPOSTSensor bSensor = myPOSTSensor("resGET-POST" , GET|POST, true, 20, TEXT_PLAIN,3);
+myGETSensor aSensor = myGETSensor("resGET1" , A0);
+myPOSTSensor bSensor = myPOSTSensor("resGET-POST" , 3);
 
 
 //Runs only once
