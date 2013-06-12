@@ -150,6 +150,7 @@ public:
     void coap_notify(void);
     //uint16_t observe_counter();
     void increase_observe_counter();
+    bool coap_has_observers();
 #endif
 
     /**

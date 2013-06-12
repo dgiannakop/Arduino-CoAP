@@ -59,7 +59,7 @@ void Coap::init(XBeeRadio *xbee, XBeeRadioResponse *response, Rx16Response *rx) 
     //resources_[rcount++] = resource_t( ".well-known/core", GET, &Coap::resource_discovery, true, 0, APPLICATION_LINK_FORMAT );
 #ifdef ENABLE_OBSERVE
     for (int i = 0; i < CONF_MAX_OBSERVERS; i++) {
-        observers[i].observe_resource_ = NULL;
+	observers[i].observe_resource_ = NULL;
     }
 #endif
 
@@ -71,34 +71,34 @@ void Coap::init(XBeeRadio *xbee, XBeeRadioResponse *response, Rx16Response *rx) 
 
 void Coap::handler() {
     if (timestamp <= millis() - 60) {
-        digitalWrite(13, HIGH);
-        // for testing
+	digitalWrite(13, HIGH);
+	// for testing
 
-        // broadcast every 1000ms
-        timestamp = millis() + 1000;
-        if (last_broadcast + 30 * 1000 < millis()) {
-            last_broadcast = millis();
-            tx_ = Tx16Request(0xffff, (uint8_t*) hereiam, 7);
-            xbee_->send(tx_, 112);
-        }
-        delay(50);
+	// broadcast every 1000ms
+	timestamp = millis() + 1000;
+	if (last_broadcast + 30 * 1000 < millis()) {
+	    last_broadcast = millis();
+	    tx_ = Tx16Request(0xffff, (uint8_t*) hereiam, 7);
+	    xbee_->send(tx_, 112);
+	}
+	delay(50);
 
-        //call every sensor's check function to update their data
-        coap_check();
+	//call every sensor's check function to update their data
+	coap_check();
 
 #ifdef ENABLE_OBSERVE
-        // notify observers
+	// notify observers
 
-        coap_notify();
+	coap_notify();
 #endif
-        // retransmit if needed
-        coap_retransmit_loop();
+	// retransmit if needed
+	coap_retransmit_loop();
     }
     if (xbee_->checkForData(112)) {
-        //get our response and save it on our response variable
-        xbee_->getResponse().getRx16Response(*rx_);
-        //call the receiver
-        receiver(xbee_->getResponse().getData(), rx_->getRemoteAddress16(), xbee_->getResponse().getDataLength());
+	//get our response and save it on our response variable
+	xbee_->getResponse().getRx16Response(*rx_);
+	//call the receiver
+	receiver(xbee_->getResponse().getData(), rx_->getRemoteAddress16(), xbee_->getResponse().getDataLength());
     }
     digitalWrite(13, LOW);
 }
@@ -145,37 +145,37 @@ coap_status_t Coap::resource_discovery(uint8_t method, uint8_t* input_data, size
     // resource discovery function (respond to .well-known/core
     if (method == COAP_GET) {
 
-        char * output = (char *) output_data;
-        //String output;
-        size_t i, index = 0;
-        ;
-        for (i = 0; i < rcount; i++) {
+	char * output = (char *) output_data;
+	//String output;
+	size_t i, index = 0;
+	;
+	for (i = 0; i < rcount; i++) {
 
-            strcpy(output + index, "<");
-            index++;
-            resources_[i].nameToStr(output + index, resources_[i].name_length() + 1);
-            index += resources_[i].name_length();
+	    strcpy(output + index, "<");
+	    index++;
+	    resources_[i].nameToStr(output + index, resources_[i].name_length() + 1);
+	    index += resources_[i].name_length();
 
-            strcpy(output + index, ">,");
-            index += 2;
+	    strcpy(output + index, ">,");
+	    index += 2;
 
-            //output.concat("<");
-            //output.concat(resources_[i].name());
-            //output.concat(">,");
-        }
+	    //output.concat("<");
+	    //output.concat(resources_[i].name());
+	    //output.concat(">,");
+	}
 
 
-        //int strlen = output.length();
-        //int strlen = resources_str.length() ;
-        // print it to char array
-        //output.toCharArray( (char*)output_data, strlen);
+	//int strlen = output.length();
+	//int strlen = resources_str.length() ;
+	// print it to char array
+	//output.toCharArray( (char*)output_data, strlen);
 
-        // delete the last char ","
-        output_data[index - 1] = '\0';
-        // set output data len
-        *output_data_len = index;
-        // return status
-        return CONTENT;
+	// delete the last char ","
+	output_data[index - 1] = '\0';
+	// set output data len
+	*output_data_len = index;
+	// return status
+	return CONTENT;
     }
     /*   
        uint8_t index=0;
@@ -183,12 +183,12 @@ coap_status_t Coap::resource_discovery(uint8_t method, uint8_t* input_data, size
        //String output;// = String("<.well-known/core>;ct=40");
        for( rid = 0; rid < CONF_MAX_RESOURCES; rid++ )
        {
-          if( resources_[rid].is_set() == true )
-          {
-             // ARDUINO
-             //output += "<" + resources_[rid].name() + ">;ct=" + resources_[rid].content_type() + ",";
-             index += sprintf( (char*)output_data + index, "<%s>,", resources_[rid].name() );
-          }
+	  if( resources_[rid].is_set() == true )
+	  {
+	     // ARDUINO
+	     //output += "<" + resources_[rid].name() + ">;ct=" + resources_[rid].content_type() + ",";
+	     index += sprintf( (char*)output_data + index, "<%s>,", resources_[rid].name() );
+	  }
        }   
        output_data[index-1] = '\0';
      *output_data_len = strlen( (char*)output_data );
@@ -204,11 +204,11 @@ coap_status_t Coap::resource_discovery(uint8_t method, uint8_t* input_data, size
 void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
     // used to identify if this packet is a CoAP packet (not a CoAP feature)
     if (buf[0] != WISELIB_MID_COAP) {
-        return;
+	return;
     }
 
     coap_status_t coap_error_code;
-    coap_packet_t msg;    
+    coap_packet_t msg;
     coap_packet_t response;
     uint8_t resource_id = 0;
 
@@ -222,148 +222,148 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
     // parse the message
     coap_error_code = msg.buffer_to_packet(len, buf, (char*) helperBuf_);
     if (msg.version_w() != COAP_VERSION) {
-        coap_error_code = BAD_REQUEST;
+	coap_error_code = BAD_REQUEST;
     }
     if (coap_error_code == NO_ERROR) {
 
-        uint16_t address = xbee_->myAddress;
-        uint8_t * bit = ((uint8_t*) & address);
-        uint8_t mbyte = bit[1];
-        uint8_t lbyte = bit[0];
-        bit[0] = mbyte;
-        bit[1] = lbyte;
+	uint16_t address = xbee_->myAddress;
+	uint8_t * bit = ((uint8_t*) & address);
+	uint8_t mbyte = bit[1];
+	uint8_t lbyte = bit[0];
+	bit[0] = mbyte;
+	bit[1] = lbyte;
 
-        // if URI_HOST is set and the HOST doesn't much this host, reject the message
-        if ((msg.is_option(URI_HOST)) && (msg.uri_host_w() != address)) {
-            return;
-        }
-        //empty msg, ack, or rst
-        if (msg.code_w() == 0) {
-            coap_unregister_con_msg(msg.mid_w(), 0);
+	// if URI_HOST is set and the HOST doesn't much this host, reject the message
+	if ((msg.is_option(URI_HOST)) && (msg.uri_host_w() != address)) {
+	    return;
+	}
+	//empty msg, ack, or rst
+	if (msg.code_w() == 0) {
+	    coap_unregister_con_msg(msg.mid_w(), 0);
 #ifdef ENABLE_OBSERVE
-            if (msg.type_w() == RST) {
-                coap_remove_observer(msg.mid_w());
-            }
+	    if (msg.type_w() == RST) {
+		coap_remove_observer(msg.mid_w());
+	    }
 #endif
-            return; // nothing else to do
-        }
-        // message is a request
-        if (msg.code_w() <= 4) // 1-4
-        {
-            switch (msg.type_w()) {
-                case CON:
-                    response.set_type(ACK);
-                    response.set_mid(msg.mid_w());
-                    break;
-                case NON:
-                    response.set_type(NON);
-                    response.set_mid(msg.mid_w());
-                    break;
-                default:
-                    // ACK or RST on a request. Not a valid coap message, ignore
-                    return;
-            }
-            //DBG(mySerial_->println("REC::REQUEST"));
-            //DBG(mySerial_->println(make_string(msg.uri_path_w(), msg.uri_path_len_w())));
+	    return; // nothing else to do
+	}
+	// message is a request
+	if (msg.code_w() <= 4) // 1-4
+	{
+	    switch (msg.type_w()) {
+		case CON:
+		    response.set_type(ACK);
+		    response.set_mid(msg.mid_w());
+		    break;
+		case NON:
+		    response.set_type(NON);
+		    response.set_mid(msg.mid_w());
+		    break;
+		default:
+		    // ACK or RST on a request. Not a valid coap message, ignore
+		    return;
+	    }
+	    //DBG(mySerial_->println("REC::REQUEST"));
+	    //DBG(mySerial_->println(make_string(msg.uri_path_w(), msg.uri_path_len_w())));
 
-            CoapResource* res = NULL;
+	    CoapResource* res = NULL;
 
-            if (make_string(msg.uri_path_w(), msg.uri_path_len_w()) == String(".well-known/core")) {
-                if (msg.isGET()) {
-                    response.set_code(resource_discovery(msg.code_w(), msg.payload_w(), msg.payload_len_w(), output_data, &output_data_len, msg.uri_queries_w()));
-                    // set the content type
-                    response.set_option(CONTENT_TYPE);
-                    response.set_content_type(APPLICATION_LINK_FORMAT);
-                    // check for blockwise response
-                    int offset = coap_blockwise_response(&msg, &response, (uint8_t**) & output_data, &output_data_len);
-                    // set the payload and length
-                    response.set_payload(output_data + offset);
-                    response.set_payload_len(output_data_len);
-                    //digitalWrite(2,HIGH);
-                }// end of method is allowed
-                else {
-                    //DBG(mySerial_->println("REC::METHOD_NOT_ALLOWED"));
-                    response.set_code(METHOD_NOT_ALLOWED);
-                }
-            }                // find the requested resource
-            else if ((res = find_resource(make_string(msg.uri_path_w(), msg.uri_path_len_w()))) != NULL) {
-                //DBG(mySerial_->println("REC::RESOURCE FOUND"));
-                // check if the requested method is allowed on this resource
-                if (res->method_allowed(msg.code_w())) {
-                    //DBG(mySerial_->println("REC::METHOD_ALLOWED"));
-                    // in case of slow reply send the ACK if this is needed
-                    if (res->fast_resource() == false && response.type_w() == ACK) {
-                        // send the ACK
-                        coap_send(&response, from);
-                        // init the response again
-                        response.init();
-                        response.set_type(CON);
-                        response.set_mid(coap_new_mid());
-                    }
-                    // execute the resource and set the status to the response object
-                    response.set_code(res->execute(msg.code_w(), msg.payload_w(), msg.payload_len_w(), output_data, &output_data_len, msg.uri_queries_w()));
-                    // set the content type
-                    response.set_option(CONTENT_TYPE);
-                    response.set_content_type(res->content_type());
-                    // check for blockwise response
-                    int offset = coap_blockwise_response(&msg, &response, (uint8_t**) & output_data, &output_data_len);
-                    // set the payload and length
-                    response.set_payload(output_data + offset);
-                    response.set_payload_len(output_data_len);
+	    if (make_string(msg.uri_path_w(), msg.uri_path_len_w()) == String(".well-known/core")) {
+		if (msg.isGET()) {
+		    response.set_code(resource_discovery(msg.code_w(), msg.payload_w(), msg.payload_len_w(), output_data, &output_data_len, msg.uri_queries_w()));
+		    // set the content type
+		    response.set_option(CONTENT_TYPE);
+		    response.set_content_type(APPLICATION_LINK_FORMAT);
+		    // check for blockwise response
+		    int offset = coap_blockwise_response(&msg, &response, (uint8_t**) & output_data, &output_data_len);
+		    // set the payload and length
+		    response.set_payload(output_data + offset);
+		    response.set_payload_len(output_data_len);
+		    //digitalWrite(2,HIGH);
+		}// end of method is allowed
+		else {
+		    //DBG(mySerial_->println("REC::METHOD_NOT_ALLOWED"));
+		    response.set_code(METHOD_NOT_ALLOWED);
+		}
+	    }// find the requested resource
+	    else if ((res = find_resource(make_string(msg.uri_path_w(), msg.uri_path_len_w()))) != NULL) {
+		//DBG(mySerial_->println("REC::RESOURCE FOUND"));
+		// check if the requested method is allowed on this resource
+		if (res->method_allowed(msg.code_w())) {
+		    //DBG(mySerial_->println("REC::METHOD_ALLOWED"));
+		    // in case of slow reply send the ACK if this is needed
+		    if (res->fast_resource() == false && response.type_w() == ACK) {
+			// send the ACK
+			coap_send(&response, from);
+			// init the response again
+			response.init();
+			response.set_type(CON);
+			response.set_mid(coap_new_mid());
+		    }
+		    // execute the resource and set the status to the response object
+		    response.set_code(res->execute(msg.code_w(), msg.payload_w(), msg.payload_len_w(), output_data, &output_data_len, msg.uri_queries_w()));
+		    // set the content type
+		    response.set_option(CONTENT_TYPE);
+		    response.set_content_type(res->content_type());
+		    // check for blockwise response
+		    int offset = coap_blockwise_response(&msg, &response, (uint8_t**) & output_data, &output_data_len);
+		    // set the payload and length
+		    response.set_payload(output_data + offset);
+		    response.set_payload_len(output_data_len);
 
 #ifdef ENABLE_OBSERVE
-                    // if it is set, register the observer
-                    if (msg.code_w() == COAP_GET && msg.is_option(OBSERVE) && res->notify_time_w() > 0 && msg.is_option(TOKEN)) {
-                        if (coap_add_observer(&msg, &from, res) == 1) {
-                            response.set_option(OBSERVE);
-                            response.set_observe(observe_counter_);
-                        }
-                    } // end of add observer
+		    // if it is set, register the observer
+		    if (msg.code_w() == COAP_GET && msg.is_option(OBSERVE) && res->notify_time_w() > 0 && msg.is_option(TOKEN)) {
+			if (coap_add_observer(&msg, &from, res) == 1) {
+			    response.set_option(OBSERVE);
+			    response.set_observe(observe_counter_);
+			}
+		    } // end of add observer
 #endif
-                }// end of method is allowed
-                else {
-                    //DBG(mySerial_->println("REC::METHOD_NOT_ALLOWED"));
-                    response.set_code(METHOD_NOT_ALLOWED);
-                } // if( method_allowed )
-            }// end of resource found
-            else {
-                //DBG(mySerial_->println("REC::NOT_FOUND"));
-                response.set_code(NOT_FOUND);
-            }
-            // if the request has a token, add it to the response
-            if (msg.is_option(TOKEN)) {
-                //DBG(mySerial_->println("REC::IS_SET_TOKEN"));
-                response.set_option(TOKEN);
-                response.set_token_len(msg.token_len_w());
-                response.set_token(msg.token_w());
-            }
-            // send the reposnse
-            coap_send(&response, from);
-            //DBG(mySerial_->println("ACTION: Sent reply"));
-            return;
-        } // end of handle request
-        // handle response
-        if (msg.code_w() >= 64 && msg.code_w() <= 191) {
-            //DBG(mySerial_->println("REC::RESPONSE"));
-            switch (msg.type_w()) {
-                case CON:
-                    response.set_type(ACK);
-                    response.set_mid(msg.mid_w());
-                    coap_send(&response, from);
-                    //DBG(mySerial_->println("ACTION: Sent ACK"));
-                    break;
-                case ACK:
-                    coap_unregister_con_msg(msg.mid_w(), 0);
-                    break;
-                case RST:
+		}// end of method is allowed
+		else {
+		    //DBG(mySerial_->println("REC::METHOD_NOT_ALLOWED"));
+		    response.set_code(METHOD_NOT_ALLOWED);
+		} // if( method_allowed )
+	    }// end of resource found
+	    else {
+		//DBG(mySerial_->println("REC::NOT_FOUND"));
+		response.set_code(NOT_FOUND);
+	    }
+	    // if the request has a token, add it to the response
+	    if (msg.is_option(TOKEN)) {
+		//DBG(mySerial_->println("REC::IS_SET_TOKEN"));
+		response.set_option(TOKEN);
+		response.set_token_len(msg.token_len_w());
+		response.set_token(msg.token_w());
+	    }
+	    // send the reposnse
+	    coap_send(&response, from);
+	    //DBG(mySerial_->println("ACTION: Sent reply"));
+	    return;
+	} // end of handle request
+	// handle response
+	if (msg.code_w() >= 64 && msg.code_w() <= 191) {
+	    //DBG(mySerial_->println("REC::RESPONSE"));
+	    switch (msg.type_w()) {
+		case CON:
+		    response.set_type(ACK);
+		    response.set_mid(msg.mid_w());
+		    coap_send(&response, from);
+		    //DBG(mySerial_->println("ACTION: Sent ACK"));
+		    break;
+		case ACK:
+		    coap_unregister_con_msg(msg.mid_w(), 0);
+		    break;
+		case RST:
 #ifdef ENABLE_OBSERVE
-                    coap_remove_observer(msg.mid_w());
+		    coap_remove_observer(msg.mid_w());
 #endif
-                    coap_unregister_con_msg(msg.mid_w(), 0);
-                    break;
-            }
-            return;
-        }
+		    coap_unregister_con_msg(msg.mid_w(), 0);
+		    break;
+	    }
+	    return;
+	}
     }// end of no error found
     else {
 	// error found
@@ -546,6 +546,17 @@ uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* 
     return 0;
 }
 
+bool Coap::coap_has_observers() {
+
+    for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
+
+	if (observers[i].observe_id_ != 0) {
+	    return true;
+	}
+    }
+    return false;
+}
+
 void Coap::coap_remove_observer(uint16_t mid) {
     uint8_t i;
     for (i = 0; i < CONF_MAX_OBSERVERS; i++) {
@@ -601,7 +612,7 @@ void Coap::coap_notify() {
 	    // ARDUINO
 	    tx_ = Tx16Request(observer->observe_id_, sendBuf_, notification_size);
 	    xbee_->send(tx_, 112);
-	    delay(20);
+	    break;
 	}
     }
 
