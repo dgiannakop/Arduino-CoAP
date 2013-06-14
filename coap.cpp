@@ -546,8 +546,7 @@ uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* 
     return 0;
 }
 
-bool Coap::coap_has_obse
-rvers() {
+bool Coap::coap_has_observers() {
 
     for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
 
