@@ -70,7 +70,11 @@ void Coap::init(XBeeRadio *xbee, XBeeRadioResponse *response, Rx16Response *rx) 
 #endif
 
 void Coap::handler() {
-    if (timestamp <= millis() - 60) {
+#ifdef ENABLE_OBSERVE
+	// notify observers
+	coap_notify();
+#endif
+  if (timestamp <= millis() - 60) {
 	digitalWrite(13, HIGH);
 	// for testing
 
@@ -86,11 +90,7 @@ void Coap::handler() {
 	//call every sensor's check function to update their data
 	coap_check();
 
-#ifdef ENABLE_OBSERVE
-	// notify observers
 
-	coap_notify();
-#endif
 	// retransmit if needed
 	coap_retransmit_loop();
     }
@@ -546,7 +546,8 @@ uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* 
     return 0;
 }
 
-bool Coap::coap_has_observers() {
+bool Coap::coap_has_obse
+rvers() {
 
     for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
 
