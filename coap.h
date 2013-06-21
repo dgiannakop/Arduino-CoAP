@@ -18,7 +18,7 @@
 #define COAP_H
 
 #include <Arduino.h>
-#include <XbeeRadio.h>
+#include <TreeRouting.h>
 #include "coap_conf.h"
 //#include "vector.h"
 #include "packet.h"
@@ -44,7 +44,7 @@ public:
 #ifdef ENABLE_DEBUG
     void init(SoftwareSerial *mySerial, XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, resource_t* resources, uint8_t* buf, char* largeBuf);
 #else
-    void init(XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx);
+    void init(uint16_t myAddress, TreeRouting * routing);
 #endif
 
     /**
@@ -169,20 +169,11 @@ public:
 
 private:
 
-    //Create the XbeeRadio object we'll be using
-    XBeeRadio *xbee_;
-    // create a reusable response object for responses we expect to handle
-    XBeeRadioResponse *response_;
-    // create a reusable rx16 response object to get the address
-    Rx16Response *rx_;
-    // create a tx16 request object
-    Tx16Request tx_;
 #ifdef ENABLE_DEBUG
     // Serial debug
     SoftwareSerial *mySerial_;
 #endif
     bool broadcasting;
-    unsigned long timestamp;
     unsigned long last_broadcast;
     char hereiam[8];
 
@@ -215,7 +206,8 @@ private:
     // observe variables
     uint16_t observe_counter_;
     uint8_t output_data[CONF_LARGE_BUF_LEN];
-
+    TreeRouting * routing_;
+    uint16_t myAddress;
 };
 
 #endif
