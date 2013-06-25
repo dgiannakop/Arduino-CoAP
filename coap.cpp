@@ -54,6 +54,46 @@ void Coap::init(EthernetClass* ethernet, EthernetUDP* ethudp) {
     //_large_buffer = (uint8_t*) malloc(CONF_LARGE_BUF_LEN * sizeof (uint8_t));
 }
 
+
+void Coap::init(WiFly* wifly) {
+    //my_delegate_t delegate;
+
+    _ethernet = NULL;
+    _ethudp = NULL;
+    _wifly = wifly;
+
+    //broadcasting = true;
+    _timestamp = millis() + 2000;
+    _mid = random(65536 / 2);
+
+    /*register built-in resource discovery resource */
+    _resource_counter = 0;
+    
+    _observe_counter = 1;
+    _observer_slot_counter = 0;
+#ifdef ENABLE_OBSERVE
+    for (int i = 0; i < CONF_MAX_OBSERVERS; i++) {
+        _observer[i].resource = NULL;
+    }
+#endif
+    for (int i = 0; i < CONF_MAX_RETRANSMIT_SLOTS; i++) {
+        _retransmit[i].mid = -1;
+    }
+    
+    //_resource[_resource_counter] = resource_t(".well-known/core", GET, delegate, true, 0, APPLICATION_LINK_FORMAT);
+    //_resource_counter++;
+
+    _retransmit_slot_counter = 0;
+    //_retransmit = (retransmit_t**) malloc(CONF_MAX_RETRANSMIT_SLOTS * sizeof (retransmit_t*));
+
+//    _observer = (observer_t**) malloc(CONF_MAX_OBSERVERS * sizeof (observer_t*));
+
+    //_packet_buffer = (uint8_t*) malloc(UDP_TX_PACKET_MAX_SIZE * sizeof (uint8_t));
+    //_helper_buffer = (uint8_t*) malloc(CONF_HELPER_BUF_LEN * sizeof (uint8_t));
+    //_send_buffer = (uint8_t*) malloc(CONF_MAX_MSG_LEN * sizeof (uint8_t));
+    //_large_buffer = (uint8_t*) malloc(CONF_LARGE_BUF_LEN * sizeof (uint8_t));
+}
+
 void Coap::handler() {
     coap_check();
 
@@ -74,16 +114,35 @@ void Coap::handler() {
         
 
     }
-    int packet_len = _ethudp->parsePacket();
-    if (packet_len) {
-        Serial.print("Receiving from ");
-                Serial.print(_ethudp->remoteIP());
-                Serial.print(":");
-                Serial.println(_ethudp->remotePort());                
-                _ethudp->read(_packet_buffer, packet_len);
-        //call the receiver
-        receiver(_packet_buffer, _ethudp->remoteIP(), _ethudp->remotePort(), packet_len);
-    } 
+    if (_ethudp!=NULL){
+      int packet_len = _ethudp->parsePacket();
+      if (packet_len) {
+	  Serial.print("Receiving from ");
+		  Serial.print(_ethudp->remoteIP());
+		  Serial.print(":");
+		  Serial.println(_ethudp->remotePort());                
+		  _ethudp->read(_packet_buffer, packet_len);
+	  //call the receiver
+	  receiver(_packet_buffer, _ethudp->remoteIP(), _ethudp->remotePort(), packet_len);
+      } 
+    }else{
+      int size = _wifly->available();
+      if (size>0){
+	for (int i=0;i<size;i++)
+	{
+	  digitalWrite(12,HIGH);
+	  delay(100);
+	  digitalWrite(12,LOW);
+	  delay(100);
+	}
+	
+	//int contents[size];
+	//for (int i=0;i<size;i++)
+	//  contents[i]=_wifly->read();
+	//for (int i=0;i<size;i++)
+	//  _wifly->write(contents[i]);
+      }
+    }
 }
 
 //void Coap::add_resource(String name, uint8_t methods, my_delegate_t callback,

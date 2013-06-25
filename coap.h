@@ -24,7 +24,7 @@
 #include "packet.h"
 #include "resource.h"
 #include "CoapSensor.h"
-
+#include <WiFlyHQ.h>
 #ifdef DEBUG
 #define DBG(c) c
 #define P(name) static const prog_uchar name[] PROGMEM
@@ -80,6 +80,7 @@ struct observer_t {
 class Coap {
 public:
     void init(EthernetClass *ethernet, EthernetUDP *ethudp);
+    void init(WiFly* wifly);
 
     /**
      * Handles all requests.
@@ -127,6 +128,7 @@ public:
 private:
     EthernetClass* _ethernet;
     EthernetUDP* _ethudp;
+    WiFly* _wifly;
 
     //bool broadcasting;
     unsigned long _timestamp;
