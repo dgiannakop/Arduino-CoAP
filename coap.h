@@ -18,7 +18,7 @@
 #define COAP_H
 
 #include <Arduino.h>
-#include <TreeRouting.h>
+#include <BaseRouting.h>
 //Software Reset
 #include <avr/wdt.h>
 #include "coap_conf.h"
@@ -46,7 +46,7 @@ public:
 #ifdef ENABLE_DEBUG
     void init(SoftwareSerial *mySerial, XBeeRadio* xbee, XBeeRadioResponse* response, Rx16Response* rx, resource_t* resources, uint8_t* buf, char* largeBuf);
 #else
-    void init(uint16_t myAddress, TreeRouting * routing);
+    void init(uint16_t myAddress, BaseRouting * routing);
 #endif
 
     /**
@@ -208,7 +208,7 @@ private:
     // observe variables
     uint16_t observe_counter_;
     uint8_t output_data[CONF_LARGE_BUF_LEN];
-    TreeRouting * routing_;
+    BaseRouting * routing_;
     uint16_t myAddress;
 };
 

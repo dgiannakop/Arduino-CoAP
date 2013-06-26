@@ -40,7 +40,7 @@ void Coap::init(SoftwareSerial *mySerial, XBeeRadio *xbee, XBeeRadioResponse *re
 }
 #else
 
-void Coap::init(uint16_t myAddress, TreeRouting * routing) {
+void Coap::init(uint16_t myAddress, BaseRouting * routing) {
     this->myAddress = myAddress;
     rcount = 0;
     last_broadcast = millis();
@@ -78,7 +78,7 @@ void Coap::handler() {
         hereiam[4] = 'i';
         hereiam[5] = 'a';
         hereiam[6] = 'm';
-        routing_->sendGateway((uint8_t*) hereiam, 7);
+        routing_->send(0xffff,(uint8_t*) hereiam, 7);
         digitalWrite(13, LOW);
     }
 
@@ -212,7 +212,7 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
     if (msg.version_w() != COAP_VERSION) {
         coap_error_code = BAD_REQUEST;
     }
-    if (coap_error_code == NO_ERROR) {
+    if (coap_error_code == COAP_NO_ERROR) {
 
         uint16_t address = this->myAddress;
 
@@ -376,7 +376,7 @@ void Coap::coap_send(coap_packet_t *msg, uint16_t dest) {
     if ((msg->type_w() == CON)) {
         coap_register_con_msg(dest, msg->mid_w(), sendBuf_, data_len, 0);
     }
-    routing_->sendGateway(sendBuf_, data_len);
+    routing_->send(0xffff,sendBuf_, data_len);
     //    xbee_->send(tx_, 112);
     DBG(debug_msg(sendBuf_, data_len));
 }
@@ -486,7 +486,7 @@ void Coap::coap_retransmit_loop(void) {
                 timeout_factor = timeout_factor << (0x0F & retransmit_timeout_and_tries_[i]);
                 // ARDUINO
                 DBG(mySerial_->println("RETRANSMIT"));
-                routing_->sendGateway(retransmit_packet_[i], retransmit_size_[i]);
+                routing_->send(0xffff,retransmit_packet_[i], retransmit_size_[i]);
                 //                xbee_->send(tx_, 112);
 
                 if ((0x0F & retransmit_timeout_and_tries_[i]) == CONF_COAP_MAX_RETRANSMIT_TRIES) {
@@ -602,7 +602,7 @@ void Coap::coap_notify() {
             resource->mark_notified();
 
             // ARDUINO
-            routing_->sendGateway(sendBuf_, notification_size);
+            routing_->send(0xffff,sendBuf_, notification_size);
             //            xbee_->send(tx_, 112);
             break;
         }

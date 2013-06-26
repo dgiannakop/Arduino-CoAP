@@ -7,7 +7,7 @@ public CoapSensor
 {
 public:
   int pin, status;
-  myGETSensor(String name, int pin): 
+  myGETSensor(char * name, int pin): 
   CoapSensor(name)
   {
     this->pin = pin;
@@ -34,4 +34,3 @@ public:
     }
   }
 };
-

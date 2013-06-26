@@ -5,7 +5,7 @@ public CoapSensor
 {
 public:
   int pin, status;
-  myPOSTSensor(String name, int pin): 
+  myPOSTSensor(char * name, int pin): 
   CoapSensor(name)
   {
     this->pin = pin;
@@ -30,4 +30,3 @@ public:
     digitalWrite(pin, status);
   }
 };
-
