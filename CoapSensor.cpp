@@ -20,7 +20,7 @@ uint8_t CoapSensor::get_method() {
     return method;
 }
 
-String CoapSensor::get_name() {
+char * CoapSensor::get_name() {
     return name;
 }
 
@@ -40,8 +40,8 @@ uint8_t CoapSensor::set_method(uint8_t method) {
     this->method = method;
 }
 
-String CoapSensor::set_name(String name) {
-    this->name = name;
+void CoapSensor::set_name(char * name) {
+    strcpy(this->name, name);
 }
 
 bool CoapSensor::set_fast(bool fast) {
@@ -61,11 +61,11 @@ coap_status_t CoapSensor::callback(uint8_t method, uint8_t* input_data, size_t i
     memcpy(output_data, bla, strlen(bla) + 1);
     *output_data_len = strlen(bla) + 1;
     if (method == GET) {
-	this->get_value(output_data, output_data_len);
-	return CONTENT;
+        this->get_value(output_data, output_data_len);
+        return CONTENT;
     } else if (method == POST) {
-	this->set_value(input_data, input_data_len, output_data, output_data_len);
-	return CHANGED;
+        this->set_value(input_data, input_data_len, output_data, output_data_len);
+        return CHANGED;
     }
 }
 

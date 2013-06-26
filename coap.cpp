@@ -95,19 +95,19 @@ void Coap::add_resource(CoapSensor * sensor) {
     //remove_resource( name );
     // create new resource object
     size_t output_data_len;
-    sensor->get_value(helperBuf_, &output_data_len);
-    sensor->set_value(helperBuf_, 1, helperBuf_, &output_data_len);
+    sensor->get_value(output_data, &output_data_len);
+    sensor->set_value(output_data, 1, output_data, &output_data_len);
     resources_[rcount++] = resource_t(sensor);
     // push it to the vector
     //resources_.push_back( new_resource );
 }
 
-void Coap::update_resource(String name, uint8_t methods, bool fast_resource, int notify_time, uint8_t content_type) {
+void Coap::update_resource(char * name, uint8_t methods, bool fast_resource, int notify_time, uint8_t content_type) {
     // TODO
     //find and update
 }
 
-void Coap::remove_resource(String name) {
+void Coap::remove_resource(char * name) {
     /*
     for( int i = 0; i < resources_.size(); i++ )
     {
@@ -140,7 +140,7 @@ coap_status_t Coap::resource_discovery(uint8_t method, uint8_t* input_data, size
 
             strcpy(output + index, "<");
             index++;
-            resources_[i].nameToStr(output + index, resources_[i].name_length() + 1);
+            strncpy(output + index, resources_[i].name(), resources_[i].name_length());
             index += resources_[i].name_length();
 
             strcpy(output + index, ">,");
@@ -251,7 +251,7 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
 
             CoapResource* res = NULL;
 
-            if (make_string(msg.uri_path_w(), msg.uri_path_len_w()) == String(".well-known/core")) {
+            if (strncmp(msg.uri_path_w(), ".well-known/core", msg.uri_path_len_w()) == 0) {
                 if (msg.isGET()) {
                     response.set_code(resource_discovery(msg.code_w(), msg.payload_w(), msg.payload_len_w(), output_data, &output_data_len, msg.uri_queries_w()));
                     // set the content type
@@ -269,7 +269,16 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
                     response.set_code(METHOD_NOT_ALLOWED);
                 }
             }// find the requested resource
-            else if ((res = find_resource(make_string(msg.uri_path_w(), msg.uri_path_len_w()))) != NULL) {
+            else if (strncmp(msg.uri_path_w(), "reset", msg.uri_path_len_w()) == 0) {
+                if (msg.isPOST()) {
+                    wdt_disable();
+                    wdt_enable(WDTO_30MS);
+                    while (1);
+                } else {
+                    //DBG(mySerial_->println("REC::METHOD_NOT_ALLOWED"));
+                    response.set_code(METHOD_NOT_ALLOWED);
+                } // if( method_allowed )
+            } else if ((res = find_resource(msg.uri_path_w(), msg.uri_path_len_w())) != NULL) {
                 //DBG(mySerial_->println("REC::RESOURCE FOUND"));
                 // check if the requested method is allowed on this resource
                 if (res->method_allowed(msg.code_w())) {
@@ -376,10 +385,10 @@ uint16_t Coap::coap_new_mid() {
     return mid_++;
 }
 
-CoapResource* Coap::find_resource(String uri_path) {
+CoapResource* Coap::find_resource(char * uri_path, size_t len) {
     for (int i = 0; i < rcount; i++) {
         //DBG(mySerial_->println(resources_[*i].name()));
-        if (uri_path == resources_[i].name()) {
+        if (strncmp(uri_path, resources_[i].name(), len) == 0) {
             return &(resources_[i]);
         }
     }
@@ -613,12 +622,12 @@ void Coap::increase_observe_counter()
 }*/
 #endif
 
-String Coap::make_string(char* charArray, size_t charLen) {
-    memset(helperBuf_, 0, CONF_HELPER_BUF_LEN);
-    memcpy(helperBuf_, charArray, charLen);
-    helperBuf_[charLen] = '\0';
-    return String((char*) helperBuf_);
-}
+//String Coap::make_string(char* charArray, size_t charLen) {
+//    memset(helperBuf_, 0, CONF_HELPER_BUF_LEN);
+//    memcpy(helperBuf_, charArray, charLen);
+//    helperBuf_[charLen] = '\0';
+//    return String((char*) helperBuf_);
+//}
 
 void Coap::debug_msg(uint8_t* msg, uint8_t len) {
     uint8_t i;

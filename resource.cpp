@@ -48,17 +48,14 @@ bool CoapResource::is_set() {
     return is_set_;
 }
 
-String CoapResource::name() {
+char * CoapResource::name() {
     return del_->get_name();
 }
 
 uint8_t CoapResource::name_length() {
-    return del_->get_name().length();
+    return strlen(del_->get_name());
 }
 
-void CoapResource::nameToStr(char* buf, size_t len) {
-    return del_->get_name().toCharArray(buf, len);
-}
 
 uint8_t CoapResource::method_allowed(uint8_t method) {
     if (method == 3)

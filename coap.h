@@ -19,6 +19,8 @@
 
 #include <Arduino.h>
 #include <TreeRouting.h>
+//Software Reset
+#include <avr/wdt.h>
 #include "coap_conf.h"
 //#include "vector.h"
 #include "packet.h"
@@ -68,12 +70,12 @@ public:
      * @param notify_time
      * @param content_type
      */
-    void update_resource(String name, uint8_t methods, bool fast_resource, int notify_time, uint8_t content_type);
+    void update_resource(char * name, uint8_t methods, bool fast_resource, int notify_time, uint8_t content_type);
     /**
      * Removes a resource from the CoAP server.
      * @param name the name of the resource to remove.
      */
-    void remove_resource(String);
+    void remove_resource(char * name);
     resource_t resource(uint8_t resource_id);
 
     /**
@@ -110,7 +112,7 @@ public:
      * @param uri_path
      * @return 
      */
-    CoapResource* find_resource(String uri_path);
+    CoapResource* find_resource(char * uri_path, size_t len);
     /**
      * 
      * @param req
@@ -158,7 +160,7 @@ public:
      * @param msg
      * @param len
      */
-    String make_string(char* charArray, size_t charLen);
+    //String make_string(char* charArray, size_t charLen);
     /**
      * 
      * @param msg

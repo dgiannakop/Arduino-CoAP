@@ -359,6 +359,9 @@ uint8_t CoapPacket::code_w() {
 bool CoapPacket::isGET() {
     return code_w() == GET;
 }
+bool CoapPacket::isPOST() {
+    return code_w() == POST;
+}
 
 uint16_t CoapPacket::mid_w() {
     return mid_;
