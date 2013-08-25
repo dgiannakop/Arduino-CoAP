@@ -121,7 +121,7 @@ public:
      * @param data_len
      * @return 
      */
-    int coap_blockwise_response(coap_packet_t *req, coap_packet_t *resp, uint8_t **data, size_t *data_len);
+    uint8_t coap_blockwise_response(coap_packet_t *req, coap_packet_t *resp, uint8_t **data, size_t *data_len);
     /**
      * 
      * @param id
@@ -161,12 +161,12 @@ public:
      * @param len
      */
     //String make_string(char* charArray, size_t charLen);
-    /**
-     * 
-     * @param msg
-     * @param len
-     */
-    void debug_msg(uint8_t* msg, uint8_t len);
+//     /**
+//      * 
+//      * @param msg
+//      * @param len
+//      */
+//     void debug_msg(uint8_t* msg, uint8_t len);
 
 
 private:
@@ -200,7 +200,7 @@ private:
     unsigned long retransmit_timestamp_[CONF_MAX_RETRANSMIT_SLOTS];
     unsigned long timeout_;
     resource_t resources_[CONF_MAX_RESOURCES];
-    int rcount;
+    uint8_t rcount;
 
 #ifdef ENABLE_OBSERVE
     observer_t observers[CONF_MAX_OBSERVERS];
@@ -210,6 +210,7 @@ private:
     uint8_t output_data[CONF_LARGE_BUF_LEN];
     BaseRouting * routing_;
     uint16_t myAddress;
+  
 };
 
 #endif

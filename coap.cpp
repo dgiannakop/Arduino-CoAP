@@ -33,7 +33,6 @@ void Coap::init(SoftwareSerial *mySerial, XBeeRadio *xbee, XBeeRadioResponse *re
     mid_ = random(65536 / 2);
     observe_counter_ = 1;
     //register built-in resource discovery resource
-
     //resource_t discovery( ".well-known/core", GET, &resource_discovery, true, 0, APPLICATION_LINK_FORMAT );
     //resources_.push_back( discovery );
 
@@ -44,17 +43,16 @@ void Coap::init(uint16_t myAddress, BaseRouting * routing) {
     this->myAddress = myAddress;
     rcount = 0;
     last_broadcast = millis();
-
     routing_ = routing;
 
     broadcasting = true;
-    mid_ = random(65536 / 2);
+    mid_ = 1;
     observe_counter_ = 1;
     //register built-in resource discovery resource
 
     //resources_[rcount++] = resource_t( ".well-known/core", GET, &Coap::resource_discovery, true, 0, APPLICATION_LINK_FORMAT );
 #ifdef ENABLE_OBSERVE
-    for (int i = 0; i < CONF_MAX_OBSERVERS; i++) {
+    for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
         observers[i].observe_resource_ = NULL;
     }
 #endif
@@ -104,18 +102,10 @@ void Coap::add_resource(CoapSensor * sensor) {
 
 void Coap::update_resource(char * name, uint8_t methods, bool fast_resource, int notify_time, uint8_t content_type) {
     // TODO
-    //find and update
 }
 
 void Coap::remove_resource(char * name) {
-    /*
-    for( int i = 0; i < resources_.size(); i++ )
-    {
-  if( resources_[i].name() == name )
-  {
-     resources_.remove( i );         
-  }
-    }*/
+    // TODO
 }
 
 resource_t Coap::resource(uint8_t resource_id) {
@@ -132,36 +122,35 @@ coap_status_t Coap::resource_discovery(uint8_t method, uint8_t* input_data, size
     // resource discovery function (respond to .well-known/core
     if (method == COAP_GET) {
 
-        char * output = (char *) output_data;
-        //String output;
-        size_t i, index = 0;
-        ;
-        for (i = 0; i < rcount; i++) {
-
-            strcpy(output + index, "<");
-            index++;
-            strncpy(output + index, resources_[i].name(), resources_[i].name_length());
-            index += resources_[i].name_length();
-
-            strcpy(output + index, ">,");
-            index += 2;
-
-            //output.concat("<");
-            //output.concat(resources_[i].name());
-            //output.concat(">,");
-        }
-
-
-        //int strlen = output.length();
-        //int strlen = resources_str.length() ;
-        // print it to char array
-        //output.toCharArray( (char*)output_data, strlen);
-
-        // delete the last char ","
-        output_data[index - 1] = '\0';
-        // set output data len
-        *output_data_len = index;
-        // return status
+	char * output = (char *) output_data;
+	//String output;
+         size_t i, index = 0;
+         for (i = 0; i < rcount; i++) {
+ 
+             strcpy(output + index, "<");
+             index++;
+             strncpy(output + index, resources_[i].name(), resources_[i].name_length());
+             index += resources_[i].name_length();
+ 
+             strcpy(output + index, ">,");
+             index += 2;
+ 
+             //output.concat("<");
+             //output.concat(resources_[i].name());
+             //output.concat(">,");
+         }
+ 
+ 
+         //int strlen = output.length();
+         //int strlen = resources_str.length() ;
+         // print it to char array
+         //output.toCharArray( (char*)output_data, strlen);
+ 
+         // delete the last char ","
+         output_data[index - 1] = '\0';
+         // set output data len
+         *output_data_len = index;
+      // return status
         return CONTENT;
     }
     /*   
@@ -258,7 +247,7 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
                     response.set_option(CONTENT_TYPE);
                     response.set_content_type(APPLICATION_LINK_FORMAT);
                     // check for blockwise response
-                    int offset = coap_blockwise_response(&msg, &response, (uint8_t**) & output_data, &output_data_len);
+                    uint8_t offset = coap_blockwise_response(&msg, &response, (uint8_t**) & output_data, &output_data_len);
                     // set the payload and length
                     response.set_payload(output_data + offset);
                     response.set_payload_len(output_data_len);
@@ -268,8 +257,8 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
                     //DBG(mySerial_->println("REC::METHOD_NOT_ALLOWED"));
                     response.set_code(METHOD_NOT_ALLOWED);
                 }
-            }// find the requested resource
-            else if (strncmp(msg.uri_path_w(), "reset", msg.uri_path_len_w()) == 0) {
+#ifdef REMOTE_RESET
+            } else if (strncmp(msg.uri_path_w(), "reset", msg.uri_path_len_w()) == 0) {
                 if (msg.isPOST()) {
                     wdt_disable();
                     wdt_enable(WDTO_30MS);
@@ -278,6 +267,7 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
                     //DBG(mySerial_->println("REC::METHOD_NOT_ALLOWED"));
                     response.set_code(METHOD_NOT_ALLOWED);
                 } // if( method_allowed )
+#endif
             } else if ((res = find_resource(msg.uri_path_w(), msg.uri_path_len_w())) != NULL) {
                 //DBG(mySerial_->println("REC::RESOURCE FOUND"));
                 // check if the requested method is allowed on this resource
@@ -298,7 +288,7 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
                     response.set_option(CONTENT_TYPE);
                     response.set_content_type(res->content_type());
                     // check for blockwise response
-                    int offset = coap_blockwise_response(&msg, &response, (uint8_t**) & output_data, &output_data_len);
+                    uint8_t offset = coap_blockwise_response(&msg, &response, (uint8_t**) & output_data, &output_data_len);
                     // set the payload and length
                     response.set_payload(output_data + offset);
                     response.set_payload_len(output_data_len);
@@ -386,7 +376,7 @@ uint16_t Coap::coap_new_mid() {
 }
 
 CoapResource* Coap::find_resource(char * uri_path, size_t len) {
-    for (int i = 0; i < rcount; i++) {
+    for (uint8_t i = 0; i < rcount; i++) {
         //DBG(mySerial_->println(resources_[*i].name()));
         if (strncmp(uri_path, resources_[i].name(), len) == 0) {
             return &(resources_[i]);
@@ -395,7 +385,7 @@ CoapResource* Coap::find_resource(char * uri_path, size_t len) {
     return NULL;
 }
 
-int Coap::coap_blockwise_response(coap_packet_t *req, coap_packet_t *resp, uint8_t **data, size_t *data_len) {
+uint8_t Coap::coap_blockwise_response(coap_packet_t *req, coap_packet_t *resp, uint8_t **data, size_t *data_len) {
     //check if request is block	
     if (req->is_option(BLOCK2)) {
         if (req->block2_size_w() > CONF_MAX_PAYLOAD_LEN) {
@@ -485,7 +475,6 @@ void Coap::coap_retransmit_loop(void) {
                 retransmit_timeout_and_tries_[i] += 1;
                 timeout_factor = timeout_factor << (0x0F & retransmit_timeout_and_tries_[i]);
                 // ARDUINO
-                DBG(mySerial_->println("RETRANSMIT"));
                 routing_->send(0xffff,retransmit_packet_[i], retransmit_size_[i]);
                 //                xbee_->send(tx_, 112);
 
@@ -550,28 +539,27 @@ bool Coap::coap_has_observers() {
 }
 
 void Coap::coap_remove_observer(uint16_t mid) {
-    uint8_t i;
-    for (i = 0; i < CONF_MAX_OBSERVERS; i++) {
+    for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
         if (observers[i].observe_last_mid_ == mid) {
-            observers[i].observe_last_mid_ = 0;
+            //observers[i].observe_last_mid_ = 0;
             observers[i].observe_id_ = 0;
-            observers[i].observe_resource_ = NULL;
-            memset(observers[i].observe_token_, 0, observers[i].observe_token_len_);
-            observers[i].observe_token_len_ = 0;
-            observers[i].observe_timestamp_ = 0;
+            //observers[i].observe_resource_ = NULL;
+            //memset(observers[i].observe_token_, 0, observers[i].observe_token_len_);
+            //observers[i].observe_token_len_ = 0;
+            //observers[i].observe_timestamp_ = 0;
         }
     }
 }
 
 void Coap::coap_notify() {
-    for (int i = 0; i < CONF_MAX_OBSERVERS; i++) {
+    for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
 
-        if (observers[i].observe_resource_ == NULL) continue;
+        if (observers[i].observe_id_ == 0) continue;
 
         observer_t * observer = &(observers[i]);
         CoapResource* resource = observer->observe_resource_;
 
-        if ((observers[i].observe_timestamp_ < millis()) || (resource->is_changed())) {
+        if ((observer->observe_timestamp_ < millis()) || (resource->is_changed())) {
             coap_packet_t notification;
             uint8_t notification_size;
             //uint8_t output_data[CONF_LARGE_BUF_LEN];
@@ -608,7 +596,6 @@ void Coap::coap_notify() {
         }
     }
 
-
 }
 
 /*uint16_t Coap::observe_counter()
@@ -629,16 +616,16 @@ void Coap::increase_observe_counter()
 //    return String((char*) helperBuf_);
 //}
 
-void Coap::debug_msg(uint8_t* msg, uint8_t len) {
-    uint8_t i;
-    for (i = 0; i < len; i++) {
-        DBG(mySerial_->print(msg[i], HEX));
-    }
-    DBG(mySerial_->println(" end"));
-}
+// void Coap::debug_msg(uint8_t* msg, uint8_t len) {
+//     uint8_t i;
+//     for (i = 0; i < len; i++) {
+//         DBG(mySerial_->print(msg[i], HEX));
+//     }
+//     DBG(mySerial_->println(" end"));
+// }
 
 void Coap::coap_check(void) {
-    int i;
+    uint8_t i;
     for (i = 0; i < rcount; i++) {
         resources_[i].check();
     }

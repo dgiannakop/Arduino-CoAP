@@ -18,8 +18,8 @@
 // end of wiselib defines
 // CONFIGURATION
 #define CONF_COAP_RESOURCE_NAME_SIZE                 7
-#define CONF_MAX_RESOURCES                  9
-#define CONF_LARGE_BUF_LEN                  CONF_MAX_RESOURCES*6
+#define CONF_MAX_RESOURCES                  8
+#define CONF_LARGE_BUF_LEN                  55
 #define CONF_HELPER_BUF_LEN                 CONF_LARGE_BUF_LEN
 #define CONF_MAX_RESOURCE_QUERIES           1
 #define CONF_MAX_OBSERVERS                  CONF_MAX_RESOURCES
