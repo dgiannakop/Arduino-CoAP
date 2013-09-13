@@ -26,7 +26,6 @@ CoapResource::CoapResource(CoapSensor * sensor) {
 
 coap_status_t CoapResource::execute(uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries) {
     if (del_) {
-
 	if (method == COAP_GET)
 	    method = GET;
 	else if (method == COAP_POST)
@@ -48,16 +47,12 @@ bool CoapResource::is_set() {
     return is_set_;
 }
 
-String CoapResource::name() {
+char * CoapResource::name() {
     return del_->get_name();
 }
 
 uint8_t CoapResource::name_length() {
-    return del_->get_name().length();
-}
-
-void CoapResource::nameToStr(char* buf, size_t len) {
-    return del_->get_name().toCharArray(buf, len);
+    return del_->get_name_length();
 }
 
 uint8_t CoapResource::method_allowed(uint8_t method) {

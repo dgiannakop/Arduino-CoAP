@@ -101,7 +101,7 @@ public:
     void udp_send(IPAddress ip, uint16_t port, const uint8_t* buffer, size_t size);
     void coap_send(coap_packet_t*, IPAddress, uint16_t);
     uint16_t coap_new_mid();
-    CoapResource* find_resource(String uri_path);
+    CoapResource* find_resource(char * uri_path, size_t len) ;
 
     //coap_status_t call_resource(uint8_t method, uint8_t resource_id, uint8_t* input_data,
     //							  size_t input_data_len, uint8_t* output_data, size_t* output_data_len,
@@ -166,6 +166,8 @@ private:
     /* observer functions */
     observer_t* allocateObserverSlot();
     void freeObserverSlot(int mid);
+
+    IPAddress *ip;
 
 #ifdef ENABLE_OBSERVE
     /* Observe variables */

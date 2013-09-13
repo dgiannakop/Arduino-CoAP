@@ -50,12 +50,11 @@ public:
     /**
      * String representation of the resource's name.
      */
-    String name();
+    char * name();
     /**
      * Length of the resource's name.
      */
     uint8_t name_length();
-    void nameToStr(char* buf, size_t len);
     /**
      * Check if the resource allows the method.
      */

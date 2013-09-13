@@ -559,3 +559,40 @@ void CoapPacket::set_payload(uint8_t *payload)
 {
 	payload_ = payload;
 }
+
+
+CoapPacket get_coap_message(char * path/*, uint16_t host*/){
+CoapPacket packet;
+packet.init();
+packet.set_type(NON);
+packet.set_mid(1);
+//packet.set_opt_count(2);
+packet.set_code(GET);
+//packet.set_option(URI_HOST);
+packet.set_option(URI_PATH);
+//packet.set_uri_host(host);
+packet.set_uri_path_len(strlen(path));
+packet.set_uri_path(path);
+return packet; 
+}
+
+ 
+
+ 
+
+CoapPacket post_coap_message(char * path/*, uint16_t host,char * payload*/){
+CoapPacket packet;
+packet.init();
+packet.set_type(NON);
+packet.set_mid(2);
+//packet.set_opt_count(2);
+packet.set_code(POST);
+//packet.set_option(URI_HOST);
+packet.set_option(URI_PATH);
+//packet.set_uri_host(host);
+packet.set_uri_path_len(strlen(path));
+packet.set_uri_path(path);
+//packet.set_payload_len(strlen(payload));
+//packet.set_payload((uint8_t*)payload);
+return packet; 
+}

@@ -20,8 +20,11 @@ uint8_t CoapSensor::get_method() {
     return method;
 }
 
-String CoapSensor::get_name() {
+char * CoapSensor::get_name() {
     return name;
+}
+uint8_t CoapSensor::get_name_length() {
+    return name_len;
 }
 
 bool CoapSensor::get_fast() {
@@ -40,8 +43,8 @@ uint8_t CoapSensor::set_method(uint8_t method) {
     this->method = method;
 }
 
-String CoapSensor::set_name(String name) {
-    this->name = name;
+char * CoapSensor::set_name(char * name) {
+    strcpy (this->name ,name);
 }
 
 bool CoapSensor::set_fast(bool fast) {

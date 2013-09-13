@@ -23,7 +23,7 @@ void Coap::init(EthernetClass* ethernet, EthernetUDP* ethudp) {
     _ethudp = ethudp;
 
     //broadcasting = true;
-    _timestamp = millis() + 2000;
+    _timestamp = millis() ;
     _mid = random(65536 / 2);
 
     /*register built-in resource discovery resource */
@@ -39,6 +39,8 @@ void Coap::init(EthernetClass* ethernet, EthernetUDP* ethudp) {
     for (int i = 0; i < CONF_MAX_RETRANSMIT_SLOTS; i++) {
         _retransmit[i].mid = -1;
     }
+    
+    
     
     //_resource[_resource_counter] = resource_t(".well-known/core", GET, delegate, true, 0, APPLICATION_LINK_FORMAT);
     //_resource_counter++;
@@ -57,14 +59,25 @@ void Coap::init(EthernetClass* ethernet, EthernetUDP* ethudp) {
 void Coap::handler() {
     coap_check();
 
-    if (_timestamp <= millis() - 60) {
+    if (millis()  - _timestamp >60000) {
         // for testing
         //digitalWrite(9, HIGH);
         // broadcast every 1000ms
-        _timestamp = millis() + 1000;
+        _timestamp = millis() ;
+	
+	
+	  
+	CoapPacket message = post_coap_message("ethernet");
+	uint8_t len  = message.packet_to_buffer(_packet_buffer);
+     _ethudp->beginPacket(IPAddress(150, 140,5, 20), 5683);
+        _ethudp->write(_packet_buffer, len);
+        _ethudp->endPacket();
         //delay(50);
         //call every sensor's check function to update their data
-        
+        Serial.println("hereiam");
+    
+    }
+    
         //digitalWrite(9, LOW);
         // notify observers
         coap_notify();
@@ -73,7 +86,8 @@ void Coap::handler() {
         coap_retransmit_loop();
         
 
-    }
+	
+	
     int packet_len = _ethudp->parsePacket();
     if (packet_len) {
         Serial.print("Receiving from ");
@@ -140,8 +154,14 @@ coap_status_t Coap::resource_discovery(uint8_t method, uint8_t* input_data, size
         for (i = 0; i < _resource_counter; i++) {
             strcpy(output + index, "<");
             index++;
-            _resource[i].nameToStr(output + index, _resource[i].name_length() + 1);
-            index += _resource[i].name_length();
+//            _resource[i].nameToStr(output + index, _resource[i].name_length() + 1);
+	    Serial.println(_resource[i].name());
+	    Serial.println(_resource[i].name_length());
+	    
+	    strncpy(output + index, _resource[i].name(), _resource[i].name_length());
+	                 index += _resource[i].name_length();
+
+            //index += _resource[i].name_length();
 
             strcpy(output + index, ">,");
             index += 2;
@@ -150,6 +170,8 @@ coap_status_t Coap::resource_discovery(uint8_t method, uint8_t* input_data, size
             //output.concat(resources_[i].name());
             //output.concat(">,");
         }
+        
+        
         //int strlen = output.length();
         //int strlen = resources_str.length() ;
         // print it to char array
@@ -157,6 +179,7 @@ coap_status_t Coap::resource_discovery(uint8_t method, uint8_t* input_data, size
 
         // delete the last char ","
         output_data[index - 1] = '\0';
+        Serial.println(output);
         // set output data len
         *output_data_len = index;
         // return status
@@ -249,10 +272,10 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
             //DBG(mySerial_->println(make_string(msg.uri_path_w(), msg.uri_path_len_w())));
 
             CoapResource* res = NULL;
-            Serial.println("Checking well");
+            //Serial.println("Checking well");
 
-             if (make_string(msg.uri_path_w(), msg.uri_path_len_w()) == String(".well-known/core")) {
-                Serial.println("is well");
+             if (strncmp(msg.uri_path_w(), ".well-known/core", msg.uri_path_len_w()) == 0) {
+              Serial.println("is well");
                 if (msg.isGET()) {
                     response.set_code(resource_discovery(msg.code_w(), msg.payload_w(), msg.payload_len_w(), _large_buffer, &output_data_len, msg.uri_queries_w()));
                     // set the content type
@@ -270,7 +293,7 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
                     response.set_code(METHOD_NOT_ALLOWED);
                 }
             }                // find the requested resource
-            else if ((res = find_resource(make_string(msg.uri_path_w(), msg.uri_path_len_w()))) != NULL) {
+            else if ((res = find_resource(msg.uri_path_w(), msg.uri_path_len_w())) != NULL) {
                 //DBG(mySerial_->println("REC::RESOURCE FOUND"));
                 // check if the requested method is allowed on this resource
                 if (res->method_allowed(msg.code_w())) {
@@ -392,14 +415,15 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
         return _mid++;
     }
 
-    CoapResource* Coap::find_resource(String uri_path) {
+    CoapResource* Coap::find_resource(char * uri_path, size_t len) {
+
     Serial.println("Coap::find_resource");
 
     for (int i = 0; i < _resource_counter; i++) {
 	//DBG(mySerial_->println(resources_[*i].name()));
         Serial.println(_resource[i].name());        
         
-	if (uri_path == _resource[i].name()) {
+        if (strncmp(uri_path, _resource[i].name(), len) == 0) {
 	    return &(_resource[i]);
 	}
     }
@@ -556,7 +580,7 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
             CoapResource  * resource = _observer[i].resource;
             if (resource == NULL) continue;
             //if( observers[i].observe_resource_ == resource_id )
-            if (_observer[i].timestamp < millis()) {
+            if (_observer[i].timestamp < millis()|| (resource->is_changed())) {
 		memset(_send_buffer, 0, CONF_MAX_MSG_LEN);
 
                 _observer[i].timestamp = millis() + 30000;
@@ -588,6 +612,7 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
                 }
 
                 _observer[i].last_mid = notification.mid_w();
+		resource->mark_notified();
 
                 // ARDUINO
 		Serial.print("Sending to "+_observer[i].port);
@@ -685,7 +710,7 @@ void Coap::receiver(uint8_t* buf, IPAddress from, uint16_t port, uint8_t len) {
     }
 
     void Coap::coap_check(void) {
-    Serial.println("coap_check");
+    //Serial.println("coap_check");
     int i;
         for (i = 0; i < _resource_counter; i++) {
         	_resource[i].check();

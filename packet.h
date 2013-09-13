@@ -217,4 +217,9 @@ private:
     uint8_t payload_len_;
     uint8_t *payload_;
 };
+
+CoapPacket get_coap_message(char * path/*, uint16_t host*/);
+CoapPacket post_coap_message(char * path/*, uint16_t host,char * payload*/);
+
+  
 #endif
