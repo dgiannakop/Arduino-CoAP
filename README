@@ -1,6 +1,7 @@
 CoAP for Arduino over Ethernet.
 Code is still in alpha.
 
+Wifly need the WiFlyHQ library :  Doxygen <a href="http://harlequin-tech.github.com/WiFlyHQ">documentation for WiFlyHQ</a>                                                                                                                                         
 
 
 /********************************************************************************
