@@ -16,29 +16,6 @@
 
 #include <coap.h>
 
-#ifdef ENABLE_DEBUG
-#define DBG(X) X
-#else
-#define DBG(X)
-#endif
-
-#ifdef ENABLE_DEBUG
-
-void Coap::init(SoftwareSerial *mySerial, XBeeRadio *xbee, XBeeRadioResponse *response, Rx16Response *rx, uint8_t* buf, char* largeBuf) {
-
-    mySerial_ = mySerial;
-
-    broadcasting = true;
-    timestamp = millis() + 2000;
-    mid_ = random(65536 / 2);
-    observe_counter_ = 1;
-    //register built-in resource discovery resource
-    //resource_t discovery( ".well-known/core", GET, &resource_discovery, true, 0, APPLICATION_LINK_FORMAT );
-    //resources_.push_back( discovery );
-
-}
-#else
-
 void Coap::init(uint16_t myAddress, BaseRouting * routing) {
     this->myAddress = myAddress;
     rcount = 0;
@@ -48,16 +25,13 @@ void Coap::init(uint16_t myAddress, BaseRouting * routing) {
     broadcasting = true;
     mid_ = 1;
     observe_counter_ = 1;
-    //register built-in resource discovery resource
 
-    //resources_[rcount++] = resource_t( ".well-known/core", GET, &Coap::resource_discovery, true, 0, APPLICATION_LINK_FORMAT );
 #ifdef ENABLE_OBSERVE
     for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
         observers[i].observe_resource_ = NULL;
     }
 #endif
 }
-#endif
 
 void Coap::handler() {
 #ifdef ENABLE_OBSERVE
@@ -80,24 +54,16 @@ void Coap::handler() {
         digitalWrite(13, LOW);
     }
 
-    //call every sensor's check function to update their data
-    coap_check();
-
-    // retransmit if needed
-    coap_retransmit_loop();
-
 }
 
 void Coap::add_resource(CoapSensor * sensor) {
     // remove if this resource is already stored (if we need to update)
-    //remove_resource( name );
+    // remove_resource( name );
     // create new resource object
     size_t output_data_len;
     sensor->get_value(output_data, &output_data_len);
     sensor->set_value(output_data, 1, output_data, &output_data_len);
     resources_[rcount++] = resource_t(sensor);
-    // push it to the vector
-    //resources_.push_back( new_resource );
 }
 
 void Coap::update_resource(char * name, uint8_t methods, bool fast_resource, int notify_time, uint8_t content_type) {
@@ -109,7 +75,6 @@ void Coap::remove_resource(char * name) {
 }
 
 resource_t Coap::resource(uint8_t resource_id) {
-    // return the resource object
     return resources_[resource_id];
 }
 
@@ -119,11 +84,9 @@ resource_t Coap::resource(uint8_t resource_id) {
 
 coap_status_t Coap::resource_discovery(uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries) {
 
-    // resource discovery function (respond to .well-known/core
     if (method == COAP_GET) {
 
 	char * output = (char *) output_data;
-	//String output;
          size_t i, index = 0;
          for (i = 0; i < rcount; i++) {
  
@@ -135,43 +98,14 @@ coap_status_t Coap::resource_discovery(uint8_t method, uint8_t* input_data, size
              strcpy(output + index, ">,");
              index += 2;
  
-             //output.concat("<");
-             //output.concat(resources_[i].name());
-             //output.concat(">,");
          }
- 
- 
-         //int strlen = output.length();
-         //int strlen = resources_str.length() ;
-         // print it to char array
-         //output.toCharArray( (char*)output_data, strlen);
- 
-         // delete the last char ","
+
          output_data[index - 1] = '\0';
          // set output data len
          *output_data_len = index;
       // return status
         return CONTENT;
     }
-    /*   
-       uint8_t index=0;
-       uint8_t rid;
-       //String output;// = String("<.well-known/core>;ct=40");
-       for( rid = 0; rid < CONF_MAX_RESOURCES; rid++ )
-       {
-          if( resources_[rid].is_set() == true )
-          {
-             // ARDUINO
-             //output += "<" + resources_[rid].name() + ">;ct=" + resources_[rid].content_type() + ",";
-             index += sprintf( (char*)output_data + index, "<%s>,", resources_[rid].name() );
-          }
-       }   
-       output_data[index-1] = '\0';
-     *output_data_len = strlen( (char*)output_data );
-       //DBG(mySerial_->println(data));
-       //return largeBuf_;
-       return CONTENT;
-     * */
 }
 
 /**
@@ -368,7 +302,6 @@ void Coap::coap_send(coap_packet_t *msg, uint16_t dest) {
     }
     routing_->send(0xffff,sendBuf_, data_len);
     //    xbee_->send(tx_, 112);
-    DBG(debug_msg(sendBuf_, data_len));
 }
 
 uint16_t Coap::coap_new_mid() {
@@ -421,7 +354,6 @@ uint8_t Coap::coap_blockwise_response(coap_packet_t *req, coap_packet_t *resp, u
 }
 
 void Coap::coap_register_con_msg(uint16_t id, uint16_t mid, uint8_t *buf, uint8_t size, uint8_t tries) {
-    DBG(mySerial_->println("Registered con msg "));
     uint8_t i = 0;
     while (i < CONF_MAX_RETRANSMIT_SLOTS) {
         if (retransmit_mid_[i] == 0) {
@@ -441,7 +373,6 @@ void Coap::coap_register_con_msg(uint16_t id, uint16_t mid, uint8_t *buf, uint8_
 }
 
 uint8_t Coap::coap_unregister_con_msg(uint16_t mid, uint8_t flag) {
-    DBG(mySerial_->println("Unregistered con msg"));
     uint8_t i = 0;
     while (i < CONF_MAX_RETRANSMIT_SLOTS) {
         if (retransmit_mid_[i] == mid) {
@@ -597,36 +528,5 @@ void Coap::coap_notify() {
     }
 
 }
-
-/*uint16_t Coap::observe_counter()
-{
-   return observe_counter_;
-}
-
-void Coap::increase_observe_counter()
-{
-   observe_counter_++;
-}*/
 #endif
 
-//String Coap::make_string(char* charArray, size_t charLen) {
-//    memset(helperBuf_, 0, CONF_HELPER_BUF_LEN);
-//    memcpy(helperBuf_, charArray, charLen);
-//    helperBuf_[charLen] = '\0';
-//    return String((char*) helperBuf_);
-//}
-
-// void Coap::debug_msg(uint8_t* msg, uint8_t len) {
-//     uint8_t i;
-//     for (i = 0; i < len; i++) {
-//         DBG(mySerial_->print(msg[i], HEX));
-//     }
-//     DBG(mySerial_->println(" end"));
-// }
-
-void Coap::coap_check(void) {
-    uint8_t i;
-    for (i = 0; i < rcount; i++) {
-        resources_[i].check();
-    }
-}
