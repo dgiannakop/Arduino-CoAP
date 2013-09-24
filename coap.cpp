@@ -27,9 +27,6 @@ void Coap::init(uint16_t myAddress, BaseRouting * routing) {
     observe_counter_ = 1;
 
 #ifdef ENABLE_OBSERVE
-    for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
-        observers[i].observe_resource_ = NULL;
-    }
 #endif
 }
 
@@ -53,6 +50,12 @@ void Coap::handler() {
         routing_->send(0xffff,(uint8_t*) hereiam, 7);
         digitalWrite(13, LOW);
     }
+    
+     //call every sensor's check function to update their data
+    coap_check();
+
+    // retransmit if needed
+    coap_retransmit_loop();
 
 }
 
@@ -430,39 +433,23 @@ void Coap::coap_retransmit_loop(void) {
 
 uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* resource) {
 
-    for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
-
-        if ((observers[i].observe_id_ == *id) && (observers[i].observe_resource_ == resource)) {
-            //update token
-            memset(observers[i].observe_token_, 0, observers[i].observe_token_len_);
-            observers[i].observe_token_len_ = msg->token_len_w();
-            memcpy(observers[i].observe_token_, msg->token_w(), msg->token_len_w());
-            return 1;
-        }
-        if (observers[i].observe_id_ == 0) {
-            observers[i].observe_id_ = *id;
-            observers[i].observe_token_len_ = msg->token_len_w();
-            memcpy(observers[i].observe_token_, msg->token_w(), msg->token_len_w());
-            observers[i].observe_resource_ = resource;
-            observers[i].observe_last_mid_ = msg->mid_w();
-            // ARDUINO
-            //		  observers[i].observe_timestamp_ = millis() + 1000*resources_[resource].notify_time_w();
-            observers[i].observe_timestamp_ = millis() + 1000;
-            observe_counter_++;
-            return 1;
-        }
-    }
-
-
-
-    return 0;
+	if (resource->observe_id_ == 0){
+	  observe_counter_++;  
+	}
+	resource->observe_id_=*id;
+	resource->observe_token_len_ = msg->token_len_w();
+	memcpy(resource->observe_token_, msg->token_w(), msg->token_len_w());
+	resource->observe_last_mid_ = msg->mid_w();
+	resource->observe_timestamp_ = millis() + 1000;
+	
+	return 1;    
 }
 
 bool Coap::coap_has_observers() {
 
     for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
 
-        if (observers[i].observe_id_ != 0) {
+        if (resources_->observe_id_ != 0) {
             return true;
         }
     }
@@ -470,10 +457,10 @@ bool Coap::coap_has_observers() {
 }
 
 void Coap::coap_remove_observer(uint16_t mid) {
-    for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
-        if (observers[i].observe_last_mid_ == mid) {
+    for (uint8_t i = 0; i < CONF_MAX_RESOURCES; i++) {
+        if (resources_[i].observe_id_!=0 && resources_[i].observe_last_mid_ == mid) {
             //observers[i].observe_last_mid_ = 0;
-            observers[i].observe_id_ = 0;
+            resources_[i].observe_id_ = 0;
             //observers[i].observe_resource_ = NULL;
             //memset(observers[i].observe_token_, 0, observers[i].observe_token_len_);
             //observers[i].observe_token_len_ = 0;
@@ -483,32 +470,29 @@ void Coap::coap_remove_observer(uint16_t mid) {
 }
 
 void Coap::coap_notify() {
-    for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
+    for (uint8_t i = 0; i < CONF_MAX_RESOURCES; i++) {
 
-        if (observers[i].observe_id_ == 0) continue;
+        if (resources_[i].observe_id_ == 0) continue;
 
-        observer_t * observer = &(observers[i]);
-        CoapResource* resource = observer->observe_resource_;
-
-        if ((observer->observe_timestamp_ < millis()) || (resource->is_changed())) {
+        if ((resources_[i].observe_timestamp_ < millis()) || (resources_[i].is_changed())) {
             coap_packet_t notification;
             uint8_t notification_size;
             //uint8_t output_data[CONF_LARGE_BUF_LEN];
             size_t output_data_len;
             memset(sendBuf_, 0, CONF_MAX_MSG_LEN);
-            observer->observe_timestamp_ = millis() + resource->notify_time_w()*1000;
+            resources_[i].observe_timestamp_ = millis() + resources_[i].notify_time_w()*1000;
 
             // send msg
             notification.init();
             notification.set_type(CON);
             notification.set_mid(coap_new_mid());
 
-            notification.set_code(resource->execute(COAP_GET, NULL, 0, output_data, &output_data_len, notification.uri_queries_w()));
+            notification.set_code(resources_[i].execute(COAP_GET, NULL, 0, output_data, &output_data_len, notification.uri_queries_w()));
             notification.set_option(CONTENT_TYPE);
-            notification.set_content_type(resource->content_type());
+            notification.set_content_type(resources_[i].content_type());
             notification.set_option(TOKEN);
-            notification.set_token_len(observer->observe_token_len_);
-            notification.set_token(observer->observe_token_);
+            notification.set_token_len(resources_[i].observe_token_len_);
+            notification.set_token(resources_[i].observe_token_);
             notification.set_option(OBSERVE);
             //next notification will have greater observe option
             notification.set_observe(observe_counter_++);
@@ -516,17 +500,23 @@ void Coap::coap_notify() {
             notification.set_payload(output_data);
             notification.set_payload_len(output_data_len);
             notification_size = notification.packet_to_buffer(sendBuf_);
-            coap_register_con_msg(observers[i].observe_id_, notification.mid_w(), sendBuf_, notification_size, coap_unregister_con_msg(observer->observe_last_mid_, 0));
-            observer->observe_last_mid_ = notification.mid_w();
-            resource->mark_notified();
+            coap_register_con_msg(resources_[i].observe_id_, notification.mid_w(), sendBuf_, notification_size, coap_unregister_con_msg(resources_[i].observe_last_mid_, 0));
+            resources_[i].observe_last_mid_ = notification.mid_w();
+            resources_[i].mark_notified();
 
             // ARDUINO
             routing_->send(0xffff,sendBuf_, notification_size);
-            //            xbee_->send(tx_, 112);
             break;
         }
     }
-
 }
+
+void Coap::coap_check(void) {
+    uint8_t i;
+    for (i = 0; i < rcount; i++) {
+        resources_[i].check();
+    }
+}
+
 #endif
 

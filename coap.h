@@ -27,7 +27,7 @@
 #include "CoapSensor.h"
 
 #include "resource.h"
-#include "observer.h"
+
 
 
 
@@ -203,7 +203,6 @@ private:
     uint8_t rcount;
 
 #ifdef ENABLE_OBSERVE
-    observer_t observers[CONF_MAX_OBSERVERS];
 #endif
     // observe variables
     uint16_t observe_counter_;
