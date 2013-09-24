@@ -67,7 +67,6 @@ public:
     bool interrupt_flag_w();
     void check();
 
-    uint16_t observe_id_;
     uint8_t observe_token_len_;
     uint16_t observe_last_mid_;
     uint8_t observe_token_[8];

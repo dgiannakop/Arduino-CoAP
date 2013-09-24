@@ -433,10 +433,10 @@ void Coap::coap_retransmit_loop(void) {
 
 uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* resource) {
 
-	if (resource->observe_id_ == 0){
+	if (resource->observe_token_len_== 0){
 	  observe_counter_++;  
 	}
-	resource->observe_id_=*id;
+	//resource->observe_id_=*id;
 	resource->observe_token_len_ = msg->token_len_w();
 	memcpy(resource->observe_token_, msg->token_w(), msg->token_len_w());
 	resource->observe_last_mid_ = msg->mid_w();
@@ -447,9 +447,8 @@ uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* 
 
 bool Coap::coap_has_observers() {
 
-    for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
-
-        if (resources_->observe_id_ != 0) {
+    for (uint8_t i = 0; i < CONF_MAX_RESOURCES; i++) {
+        if (resources_[i].observe_token_len_!= 0) {
             return true;
         }
     }
@@ -458,13 +457,8 @@ bool Coap::coap_has_observers() {
 
 void Coap::coap_remove_observer(uint16_t mid) {
     for (uint8_t i = 0; i < CONF_MAX_RESOURCES; i++) {
-        if (resources_[i].observe_id_!=0 && resources_[i].observe_last_mid_ == mid) {
-            //observers[i].observe_last_mid_ = 0;
-            resources_[i].observe_id_ = 0;
-            //observers[i].observe_resource_ = NULL;
-            //memset(observers[i].observe_token_, 0, observers[i].observe_token_len_);
-            //observers[i].observe_token_len_ = 0;
-            //observers[i].observe_timestamp_ = 0;
+        if (resources_[i].observe_token_len_!=0 && resources_[i].observe_last_mid_ == mid) {
+            resources_[i].observe_token_len_= 0;
         }
     }
 }
@@ -472,7 +466,7 @@ void Coap::coap_remove_observer(uint16_t mid) {
 void Coap::coap_notify() {
     for (uint8_t i = 0; i < CONF_MAX_RESOURCES; i++) {
 
-        if (resources_[i].observe_id_ == 0) continue;
+        if (resources_[i].observe_token_len_== 0) continue;
 
         if ((resources_[i].observe_timestamp_ < millis()) || (resources_[i].is_changed())) {
             coap_packet_t notification;
@@ -500,7 +494,7 @@ void Coap::coap_notify() {
             notification.set_payload(output_data);
             notification.set_payload_len(output_data_len);
             notification_size = notification.packet_to_buffer(sendBuf_);
-            coap_register_con_msg(resources_[i].observe_id_, notification.mid_w(), sendBuf_, notification_size, coap_unregister_con_msg(resources_[i].observe_last_mid_, 0));
+            coap_register_con_msg(resources_[i].observe_token_len_, notification.mid_w(), sendBuf_, notification_size, coap_unregister_con_msg(resources_[i].observe_last_mid_, 0));
             resources_[i].observe_last_mid_ = notification.mid_w();
             resources_[i].mark_notified();
 

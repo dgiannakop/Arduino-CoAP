@@ -22,6 +22,7 @@ CoapResource::CoapResource() {
 CoapResource::CoapResource(CoapSensor * sensor) {
     del_ = sensor;
     is_set_ = true;
+    observe_token_len_=0;
 }
 
 coap_status_t CoapResource::execute(uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries) {
