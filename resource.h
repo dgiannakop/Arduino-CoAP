@@ -30,6 +30,7 @@ public:
      *
      */
     CoapResource(CoapSensor * sensor);
+
     /**
      * Called when a resouce is to be evaluated again.
      */
@@ -76,7 +77,6 @@ private:
     bool is_set_;
     CoapSensor *del_;
     bool interrupt_flag_;
-    
     
 };
 #endif

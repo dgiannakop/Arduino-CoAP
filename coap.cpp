@@ -91,8 +91,8 @@ coap_status_t Coap::resource_discovery(uint8_t method, uint8_t* input_data, size
 
 	char * output = (char *) output_data;
          size_t i, index = 0;
-         for (i = 0; i < rcount; i++) {
- 
+         for (i = 0; i < CONF_MAX_RESOURCES; i++) {
+	      if (!resources_[i].is_set()) continue;
              strcpy(output + index, "<");
              index++;
              strncpy(output + index, resources_[i].name(), resources_[i].name_length());
@@ -500,7 +500,7 @@ void Coap::coap_notify() {
 
             // ARDUINO
             routing_->send(0xffff,sendBuf_, notification_size);
-            break;
+            delay(50);
         }
     }
 }

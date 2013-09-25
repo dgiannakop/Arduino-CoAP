@@ -17,6 +17,7 @@
 #include "resource.h"
 
 CoapResource::CoapResource() {
+  this->is_set_=false;
 }
 
 CoapResource::CoapResource(CoapSensor * sensor) {
