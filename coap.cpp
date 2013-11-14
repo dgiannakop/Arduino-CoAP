@@ -66,7 +66,7 @@ void Coap::handler() {
 #endif
 
     // broadcast every 1000ms
-    if (millis() - last_broadcast > 30 * 1000) {
+    if (millis() - last_broadcast > 22000) {
         digitalWrite(13, HIGH);
         last_broadcast = millis();
         hereiam[0] = 'h';
@@ -287,6 +287,8 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
                     // set the content type
                     response.set_option(CONTENT_TYPE);
                     response.set_content_type(res->content_type());
+		    response.set_option(MAX_AGE);
+                   response.set_max_age(res->notify_time_w());
                     // check for blockwise response
                     uint8_t offset = coap_blockwise_response(&msg, &response, (uint8_t**) & output_data, &output_data_len);
                     // set the payload and length
@@ -506,6 +508,7 @@ uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* 
             memset(observers[i].observe_token_, 0, observers[i].observe_token_len_);
             observers[i].observe_token_len_ = msg->token_len_w();
             memcpy(observers[i].observe_token_, msg->token_w(), msg->token_len_w());
+	    observers[i].observe_timestamp_ = millis() + resource->notify_time_w()*1000;
             return 1;
         }
         if (observers[i].observe_id_ == 0) {
@@ -516,7 +519,7 @@ uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* 
             observers[i].observe_last_mid_ = msg->mid_w();
             // ARDUINO
             //		  observers[i].observe_timestamp_ = millis() + 1000*resources_[resource].notify_time_w();
-            observers[i].observe_timestamp_ = millis() + 1000;
+            observers[i].observe_timestamp_ = millis() + resource->notify_time_w()*1000;
             observe_counter_++;
             return 1;
         }
@@ -575,6 +578,8 @@ void Coap::coap_notify() {
             notification.set_code(resource->execute(COAP_GET, NULL, 0, output_data, &output_data_len, notification.uri_queries_w()));
             notification.set_option(CONTENT_TYPE);
             notification.set_content_type(resource->content_type());
+	    notification.set_option(MAX_AGE);
+	    notification.set_max_age(resources_->notify_time_w());
             notification.set_option(TOKEN);
             notification.set_token_len(observer->observe_token_len_);
             notification.set_token(observer->observe_token_);
@@ -592,7 +597,8 @@ void Coap::coap_notify() {
             // ARDUINO
             routing_->send(0xffff,sendBuf_, notification_size);
             //            xbee_->send(tx_, 112);
-            break;
+            //break;
+	    delay(20);
         }
     }
 
