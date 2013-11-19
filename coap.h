@@ -204,13 +204,14 @@ private:
 
 #ifdef ENABLE_OBSERVE
     observer_t observers[CONF_MAX_OBSERVERS];
+    int observer_notify_counter; 
 #endif
     // observe variables
     uint16_t observe_counter_;
     uint8_t output_data[CONF_LARGE_BUF_LEN];
     BaseRouting * routing_;
-    uint16_t myAddress;
   
+    uint16_t myAddress;
 };
 
 #endif

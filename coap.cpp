@@ -27,7 +27,7 @@
 void Coap::init(SoftwareSerial *mySerial, XBeeRadio *xbee, XBeeRadioResponse *response, Rx16Response *rx, uint8_t* buf, char* largeBuf) {
 
     mySerial_ = mySerial;
-
+    
     broadcasting = true;
     timestamp = millis() + 2000;
     mid_ = random(65536 / 2);
@@ -36,6 +36,7 @@ void Coap::init(SoftwareSerial *mySerial, XBeeRadio *xbee, XBeeRadioResponse *re
     //resource_t discovery( ".well-known/core", GET, &resource_discovery, true, 0, APPLICATION_LINK_FORMAT );
     //resources_.push_back( discovery );
 
+    observer_notify_counter =0;
 }
 #else
 
@@ -55,7 +56,10 @@ void Coap::init(uint16_t myAddress, BaseRouting * routing) {
     for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
         observers[i].observe_resource_ = NULL;
     }
+    
 #endif
+
+    observer_notify_counter =0;
 }
 #endif
 
@@ -508,7 +512,7 @@ uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* 
             memset(observers[i].observe_token_, 0, observers[i].observe_token_len_);
             observers[i].observe_token_len_ = msg->token_len_w();
             memcpy(observers[i].observe_token_, msg->token_w(), msg->token_len_w());
-	    observers[i].observe_timestamp_ = millis() + resource->notify_time_w()*1000;
+	    observers[i].observe_timestamp_ = millis() + resource->notify_time_w()*1000+(rand()%5000);
             return 1;
         }
         if (observers[i].observe_id_ == 0) {
@@ -519,7 +523,7 @@ uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* 
             observers[i].observe_last_mid_ = msg->mid_w();
             // ARDUINO
             //		  observers[i].observe_timestamp_ = millis() + 1000*resources_[resource].notify_time_w();
-            observers[i].observe_timestamp_ = millis() + resource->notify_time_w()*1000;
+            observers[i].observe_timestamp_ = millis() + resource->notify_time_w()*1000+(rand()%5000);
             observe_counter_++;
             return 1;
         }
@@ -555,11 +559,10 @@ void Coap::coap_remove_observer(uint16_t mid) {
 }
 
 void Coap::coap_notify() {
-    for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
-
-        if (observers[i].observe_id_ == 0) continue;
-
-        observer_t * observer = &(observers[i]);
+    
+        if (observers[observer_notify_counter].observe_id_ != 0) {
+	  
+        observer_t * observer = &(observers[observer_notify_counter]);
         CoapResource* resource = observer->observe_resource_;
 
         if ((observer->observe_timestamp_ < millis()) || (resource->is_changed())) {
@@ -590,17 +593,18 @@ void Coap::coap_notify() {
             notification.set_payload(output_data);
             notification.set_payload_len(output_data_len);
             notification_size = notification.packet_to_buffer(sendBuf_);
-            coap_register_con_msg(observers[i].observe_id_, notification.mid_w(), sendBuf_, notification_size, coap_unregister_con_msg(observer->observe_last_mid_, 0));
+            coap_register_con_msg(observers[observer_notify_counter].observe_id_, notification.mid_w(), sendBuf_, notification_size, coap_unregister_con_msg(observer->observe_last_mid_, 0));
             observer->observe_last_mid_ = notification.mid_w();
             resource->mark_notified();
 
             // ARDUINO
             routing_->send(0xffff,sendBuf_, notification_size);
             //            xbee_->send(tx_, 112);
-            //break;
-	    delay(20);
-        }
     }
+	}
+	observer_notify_counter ++;
+	if (observer_notify_counter == CONF_MAX_OBSERVERS) {observer_notify_counter =0;}
+
 
 }
 
