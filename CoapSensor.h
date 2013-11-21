@@ -26,7 +26,7 @@ public:
         this->method = GET | POST;
         strcpy(this->name,"unknown");
         this->fast = true;
-        this->notify_time = 20;
+        this->notify_time = 30;
         this->content_type = TEXT_PLAIN;
         this->changed = false;
     }
@@ -35,7 +35,7 @@ public:
         this->method = GET | POST;
         strcpy(this->name ,name);
         this->fast = true;
-        this->notify_time = 20;
+        this->notify_time = 30;
         this->content_type = TEXT_PLAIN;
         this->changed = false;
     }

@@ -512,7 +512,7 @@ uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* 
             memset(observers[i].observe_token_, 0, observers[i].observe_token_len_);
             observers[i].observe_token_len_ = msg->token_len_w();
             memcpy(observers[i].observe_token_, msg->token_w(), msg->token_len_w());
-	    observers[i].observe_timestamp_ = millis() + resource->notify_time_w()*1000+(rand()%5000);
+	    observers[i].observe_timestamp_ = millis() + ((unsigned long)resource->notify_time_w())*1000+(rand()%5000);
             return 1;
         }
         if (observers[i].observe_id_ == 0) {
@@ -523,7 +523,7 @@ uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* 
             observers[i].observe_last_mid_ = msg->mid_w();
             // ARDUINO
             //		  observers[i].observe_timestamp_ = millis() + 1000*resources_[resource].notify_time_w();
-            observers[i].observe_timestamp_ = millis() + resource->notify_time_w()*1000+(rand()%5000);
+            observers[i].observe_timestamp_ = millis() + ((unsigned long)resource->notify_time_w())*1000+(rand()%5000);
             observe_counter_++;
             return 1;
         }
@@ -560,18 +560,18 @@ void Coap::coap_remove_observer(uint16_t mid) {
 
 void Coap::coap_notify() {
     
-        if (observers[observer_notify_counter].observe_id_ != 0) {
+	observer_t * observer = &(observers[observer_notify_counter]);
+        
+	if (observer->observe_id_ != 0) {
+	  CoapResource* resource = observer->observe_resource_;
 	  
-        observer_t * observer = &(observers[observer_notify_counter]);
-        CoapResource* resource = observer->observe_resource_;
-
-        if ((observer->observe_timestamp_ < millis()) || (resource->is_changed())) {
-            coap_packet_t notification;
+	  if ((observer->observe_timestamp_ < millis()) || (resource->is_changed())) {
+	    coap_packet_t notification;
             uint8_t notification_size;
             //uint8_t output_data[CONF_LARGE_BUF_LEN];
             size_t output_data_len;
             memset(sendBuf_, 0, CONF_MAX_MSG_LEN);
-            observer->observe_timestamp_ = millis() + resource->notify_time_w()*1000;
+            observer->observe_timestamp_ = millis() + ((unsigned long)resource->notify_time_w())*1000;
 
             // send msg
             notification.init();
@@ -600,7 +600,7 @@ void Coap::coap_notify() {
             // ARDUINO
             routing_->send(0xffff,sendBuf_, notification_size);
             //            xbee_->send(tx_, 112);
-    }
+	  }
 	}
 	observer_notify_counter ++;
 	if (observer_notify_counter == CONF_MAX_OBSERVERS) {observer_notify_counter =0;}
