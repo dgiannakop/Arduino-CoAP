@@ -70,6 +70,7 @@ void Coap::handler() {
 #endif
 
     // broadcast every 1000ms
+    if (coap_has_observers()){
     if (millis() - last_broadcast > 22000) {
         digitalWrite(13, HIGH);
         last_broadcast = millis();
@@ -82,6 +83,22 @@ void Coap::handler() {
         hereiam[6] = 'm';
         routing_->send(0xffff,(uint8_t*) hereiam, 7);
         digitalWrite(13, LOW);
+    }
+      
+    }else{
+    if (millis() - last_broadcast > 5000) {
+        digitalWrite(13, HIGH);
+        last_broadcast = millis();
+        hereiam[0] = 'h';
+        hereiam[1] = 'e';
+        hereiam[2] = 'r';
+        hereiam[3] = 'e';
+        hereiam[4] = 'i';
+        hereiam[5] = 'a';
+        hereiam[6] = 'm';
+        routing_->send(0xffff,(uint8_t*) hereiam, 7);
+        digitalWrite(13, LOW);
+    }  
     }
 
     //call every sensor's check function to update their data
