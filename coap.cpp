@@ -61,6 +61,30 @@ void Coap::init(uint16_t myAddress, BaseRouting * routing) {
 
     observer_notify_counter =0;
 }
+
+void Coap::init(uint16_t myAddress, BaseRouting * routing,char*name) {
+    strcpy(this->_name,name);
+    this->myAddress = myAddress;
+    rcount = 0;
+    last_broadcast = millis();
+    routing_ = routing;
+
+    broadcasting = true;
+    mid_ = 1;
+    observe_counter_ = 1;
+    //register built-in resource discovery resource
+
+    //resources_[rcount++] = resource_t( ".well-known/core", GET, &Coap::resource_discovery, true, 0, APPLICATION_LINK_FORMAT );
+#ifdef ENABLE_OBSERVE
+    for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
+        observers[i].observe_resource_ = NULL;
+    }
+    
+#endif
+
+    observer_notify_counter =0;
+}
+
 #endif
 
 void Coap::handler() {
@@ -288,6 +312,23 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
                     response.set_code(METHOD_NOT_ALLOWED);
                 } // if( method_allowed )
 #endif
+            } else if (strncmp(msg.uri_path_w(), "rdf", msg.uri_path_len_w()) == 0) {
+                if (msg.isGET()) {
+                     response.set_code(CONTENT);
+		     output_data_len = sprintf((char*)output_data,"%s",_name);
+                    // set the content type
+                    response.set_option(CONTENT_TYPE);
+                    response.set_content_type(TEXT_PLAIN);
+                    // check for blockwise response
+                    uint8_t offset = coap_blockwise_response(&msg, &response, (uint8_t**) & output_data, &output_data_len);
+                    // set the payload and length
+                    response.set_payload(output_data + offset);
+                    response.set_payload_len(output_data_len);
+                    //digitalWrite(2,HIGH);
+                } else {
+                    //DBG(mySerial_->println("REC::METHOD_NOT_ALLOWED"));
+                    response.set_code(METHOD_NOT_ALLOWED);
+                } // if( method_allowed )
             } else if ((res = find_resource(msg.uri_path_w(), msg.uri_path_len_w())) != NULL) {
                 //DBG(mySerial_->println("REC::RESOURCE FOUND"));
                 // check if the requested method is allowed on this resource
