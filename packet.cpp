@@ -76,7 +76,7 @@ coap_status_t CoapPacket::buffer_to_packet(uint8_t len, uint8_t* buf, char* larg
 		case URI_HOST:
 		    // based on id, not ip-literal
 		    set_option(URI_HOST);
-		    uri_host_ = get_int_opt_value(current_opt, opt_len, true);
+		    strncpy(uri_host_, (char*)current_opt, opt_len); // may fix
 		    break;
 		case LOCATION_PATH:
 		    set_option(LOCATION_PATH);
@@ -159,9 +159,19 @@ uint8_t CoapPacket::packet_to_buffer(uint8_t *buf) {
 	opt_count_++;
     }
     if (is_option(URI_HOST)) {
-	buf_index += set_int_opt_value(URI_HOST, current_delta, &buf[buf_index], uri_host_);
+	buf[buf_index++] = (URI_HOST- current_delta) << 4 | strlen(uri_host_);
+	char char_host[6];
+	int size = sprintf(char_host,"%s",uri_host_);
+	Serial.println(size);
+	Serial.println(char_host);
+	memcpy(&buf[buf_index], char_host, size );
 	current_delta = URI_HOST;
-	opt_count_++;
+	buf_index += size;
+	opt_count_ ++;
+	
+//	buf_index += set_int_opt_value(URI_HOST, current_delta, &buf[buf_index], uri_host_);
+//	current_delta = URI_HOST;
+//	opt_count_++;
     }
     if (is_option(URI_PORT)) {
 	buf_index += set_int_opt_value(URI_PORT, current_delta, &buf[buf_index], uri_port_);
@@ -379,7 +389,7 @@ uint32_t CoapPacket::max_age_w() {
     return max_age_;
 }
 
-uint16_t CoapPacket::uri_host_w() {
+char * CoapPacket::uri_host_w() {
     return uri_host_;
 }
 
@@ -471,8 +481,8 @@ void CoapPacket::set_max_age(uint32_t max_age) {
     max_age_ = max_age;
 }
 
-void CoapPacket::set_uri_host(uint16_t uri_host) {
-    uri_host_ = uri_host;
+void CoapPacket::set_uri_host(char * uri_host) {
+    strcpy(uri_host_ ,uri_host);
 }
 
 void CoapPacket::set_uri_port(uint16_t uri_port) {
@@ -534,4 +544,44 @@ void CoapPacket::set_payload_len(uint8_t payload_len) {
 
 void CoapPacket::set_payload(uint8_t* payload) {
     payload_ = payload;
+}
+
+
+
+
+CoapPacket get_coap_message(char * path, char * host){
+CoapPacket packet;
+packet.init();
+packet.set_type(NON);
+packet.set_mid(1);
+//packet.set_opt_count(2);
+packet.set_code(GET);
+packet.set_option(URI_HOST);
+packet.set_option(URI_PATH);
+Serial.println(host);
+packet.set_uri_host(host);
+packet.set_uri_path_len(strlen(path));
+packet.set_uri_path(path);
+return packet; 
+}
+
+ 
+
+ 
+
+CoapPacket post_coap_message(char * path, char * host,char * payload){
+CoapPacket packet;
+packet.init();
+packet.set_type(NON);
+packet.set_mid(2);
+//packet.set_opt_count(2);
+packet.set_code(POST);
+packet.set_option(URI_HOST);
+packet.set_option(URI_PATH);
+packet.set_uri_host(host);
+packet.set_uri_path_len(strlen(path));
+packet.set_uri_path(path);
+packet.set_payload_len(strlen(payload));
+packet.set_payload((uint8_t*)payload);
+return packet; 
 }

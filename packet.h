@@ -37,7 +37,7 @@ public:
     uint32_t is_option(uint8_t opt);
     uint8_t content_type_w();
     uint32_t max_age_w();
-    uint16_t uri_host_w();
+    char * uri_host_w();
     uint16_t uri_port_w();
     uint8_t uri_path_len_w();
     char* uri_path_w();
@@ -61,7 +61,7 @@ public:
     void set_option(uint8_t opt);
     void set_content_type(uint8_t content_type);
     void set_max_age(uint32_t max_age);
-    void set_uri_host(uint16_t uri_host);
+    void set_uri_host(char* uri_host);
     void set_uri_port(uint16_t uri_port);
     void set_uri_path_len(uint8_t uri_path_len);
     void set_uri_path(char* uri_path);
@@ -103,7 +103,7 @@ private:
     //uint8_t etag_len_; // 4
     //uint8_t etag[8]_; // 4
     //size_t uri_host_len_; // 5
-    uint16_t uri_host_; // 5
+    char uri_host_[8]; // 5
     uint16_t uri_port_; // 7
     //TODO...
     size_t uri_path_len_; // 9
@@ -131,4 +131,9 @@ private:
     uint8_t payload_len_;
     uint8_t *payload_;
 };
+
+
+CoapPacket get_coap_message(char * path, char * host);
+CoapPacket post_coap_message(char * path, char * host,char * payload);
+
 #endif

@@ -248,9 +248,11 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
     if (coap_error_code == COAP_NO_ERROR) {
 
         uint16_t address = this->myAddress;
+	char saddress[10];
+	sprintf(saddress,"%x",address);
 
         // if URI_HOST is set and the HOST doesn't much this host, reject the message
-        if ((msg.is_option(URI_HOST)) && (msg.uri_host_w() != address)) {
+        if ((msg.is_option(URI_HOST)) && (strcmp(msg.uri_host_w(), saddress)==0 )) {
             return;
         }
         //empty msg, ack, or rst
@@ -697,3 +699,6 @@ void Coap::coap_check(void) {
         resources_[i].check();
     }
 }
+
+
+
