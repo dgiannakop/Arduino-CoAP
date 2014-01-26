@@ -140,7 +140,7 @@ coap_status_t CoapPacket::buffer_to_packet(uint8_t len, uint8_t* buf, char* larg
     //get payload
     payload_ = current_opt;
     payload_len_ = len - (payload_ - buf);
-
+    uri_path_[uri_path_len_]='\0';
     return COAP_NO_ERROR;
 }
 

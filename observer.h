@@ -21,7 +21,7 @@ typedef struct observer_t {
     uint16_t observe_id_;
     uint8_t observe_token_len_;
     uint16_t observe_last_mid_;
-    CoapResource* observe_resource_;
+    CoapSensor* observe_resource_;
     uint8_t observe_token_[8];
     unsigned long observe_timestamp_;
 };

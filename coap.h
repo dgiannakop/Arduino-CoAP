@@ -26,13 +26,16 @@
 #include "packet.h"
 #include "CoapSensor.h"
 
-#include "resource.h"
+
+//#include "resource.h"
 #include "observer.h"
 
-
+#if defined(__AVR_ATmega32U4__) || defined(__MK20DX128__)
+#define	ENABLE_DEBUG_COAP_UART
+#endif
 
 typedef CoapPacket coap_packet_t;
-typedef CoapResource resource_t;
+typedef CoapSensor resource_t;
 
 /**
  * The Coap Server Class.
@@ -77,7 +80,7 @@ public:
      * @param name the name of the resource to remove.
      */
     void remove_resource(char * name);
-    resource_t resource(uint8_t resource_id);
+    resource_t * resource(uint8_t resource_id);
 
     /**
      * Generates the body of the response to a new .well-known/core request message.
@@ -113,7 +116,7 @@ public:
      * @param uri_path
      * @return 
      */
-    CoapResource* find_resource(char * uri_path, size_t len);
+    CoapSensor* find_resource(char * uri_path, size_t len);
     /**
      * 
      * @param req
@@ -146,7 +149,7 @@ public:
     //coap_status_t call_resource( uint8_t method, uint8_t resource_id, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries );
     //void coap_resource_discovery( size_t *payload_len );
 #ifdef ENABLE_OBSERVE    
-    uint8_t coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* resource_id);
+    uint8_t coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapSensor* resource_id);
     void coap_remove_observer(uint16_t mid);
     void coap_notify_from_timer();
     void coap_notify_from_interrupt(uint8_t resource_id);
@@ -200,7 +203,7 @@ private:
     uint8_t retransmit_packet_[CONF_MAX_RETRANSMIT_SLOTS][CONF_MAX_MSG_LEN];
     unsigned long retransmit_timestamp_[CONF_MAX_RETRANSMIT_SLOTS];
     unsigned long timeout_;
-    resource_t resources_[CONF_MAX_RESOURCES];
+    resource_t * resources_[CONF_MAX_RESOURCES];
     uint8_t rcount;
 
 #ifdef ENABLE_OBSERVE

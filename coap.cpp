@@ -139,7 +139,7 @@ void Coap::add_resource(CoapSensor * sensor) {
     size_t output_data_len;
     sensor->get_value(output_data, &output_data_len);
     sensor->set_value(output_data, 1, output_data, &output_data_len);
-    resources_[rcount++] = resource_t(sensor);
+    resources_[rcount++] = sensor;
     // push it to the vector
     //resources_.push_back( new_resource );
 }
@@ -152,7 +152,7 @@ void Coap::remove_resource(char * name) {
     // TODO
 }
 
-resource_t Coap::resource(uint8_t resource_id) {
+resource_t* Coap::resource(uint8_t resource_id) {
     // return the resource object
     return resources_[resource_id];
 }
@@ -173,8 +173,8 @@ coap_status_t Coap::resource_discovery(uint8_t method, uint8_t* input_data, size
  
              strcpy(output + index, "<");
              index++;
-             strncpy(output + index, resources_[i].name(), resources_[i].name_length());
-             index += resources_[i].name_length();
+             strncpy(output + index, resources_[i]->get_name(), strlen(resources_[i]->get_name()));
+             index += strlen(resources_[i]->get_name());
  
              strcpy(output + index, ">,");
              index += 2;
@@ -281,8 +281,11 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
             }
             //DBG(mySerial_->println("REC::REQUEST"));
             //DBG(mySerial_->println(make_string(msg.uri_path_w(), msg.uri_path_len_w())));
-
-            CoapResource* res = NULL;
+#ifdef ENABLE_DEBUG_COAP_UART
+Serial.print("REQ:");
+Serial.println(msg.uri_path_w());
+#endif
+            CoapSensor* res = NULL;
 
             if (strncmp(msg.uri_path_w(), ".well-known/core", msg.uri_path_len_w()) == 0) {
                 if (msg.isGET()) {
@@ -335,21 +338,33 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
                 if (res->method_allowed(msg.code_w())) {
                     //DBG(mySerial_->println("REC::METHOD_ALLOWED"));
                     // in case of slow reply send the ACK if this is needed
-                    if (res->fast_resource() == false && response.type_w() == ACK) {
+                    if (res->get_fast() == false && response.type_w() == ACK) {
                         // send the ACK
                         coap_send(&response, from);
+#ifdef ENABLE_DEBUG_COAP_UART
+  Serial.println("Send Coap Ack!");
+#endif
                         // init the response again
                         response.init();
                         response.set_type(CON);
                         response.set_mid(coap_new_mid());
                     }
+                    
                     // execute the resource and set the status to the response object
-                    response.set_code(res->execute(msg.code_w(), msg.payload_w(), msg.payload_len_w(), output_data, &output_data_len, msg.uri_queries_w()));
+                    //response.set_code(res->execute(msg.code_w(), msg.payload_w(), msg.payload_len_w(), output_data, &output_data_len, msg.uri_queries_w()));
+                    if (msg.code_w() == COAP_GET){
+		      response.set_code(res->callback(GET, msg.payload_w(), msg.payload_len_w(), output_data, &output_data_len, msg.uri_queries_w()));
+		    }else if (msg.code_w() == COAP_POST){
+		      response.set_code(res->callback(POST, msg.payload_w(), msg.payload_len_w(), output_data, &output_data_len, msg.uri_queries_w()));
+		    }else{
+		      response.set_code(res->callback(msg.code_w(), msg.payload_w(), msg.payload_len_w(), output_data, &output_data_len, msg.uri_queries_w()));
+		    }
+                    
                     // set the content type
                     response.set_option(CONTENT_TYPE);
-                    response.set_content_type(res->content_type());
+                    response.set_content_type(res->get_content_type());
 		    response.set_option(MAX_AGE);
-                   response.set_max_age(res->notify_time_w());
+                   response.set_max_age(res->get_notify_time());
                     // check for blockwise response
                     uint8_t offset = coap_blockwise_response(&msg, &response, (uint8_t**) & output_data, &output_data_len);
                     // set the payload and length
@@ -358,7 +373,7 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
 
 #ifdef ENABLE_OBSERVE
                     // if it is set, register the observer
-                    if (msg.code_w() == COAP_GET && msg.is_option(OBSERVE) && res->notify_time_w() > 0 && msg.is_option(TOKEN)) {
+                    if (msg.code_w() == COAP_GET && msg.is_option(OBSERVE) && res->get_notify_time() > 0 && msg.is_option(TOKEN)) {
                         if (coap_add_observer(&msg, &from, res) == 1) {
                             response.set_option(OBSERVE);
                             response.set_observe(observe_counter_);
@@ -384,6 +399,9 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
             }
             // send the reposnse
             coap_send(&response, from);
+#ifdef ENABLE_DEBUG_COAP_UART
+  Serial.println("Send Coap Response!");
+#endif
             //DBG(mySerial_->println("ACTION: Sent reply"));
             return;
         } // end of handle request
@@ -395,6 +413,9 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
                     response.set_type(ACK);
                     response.set_mid(msg.mid_w());
                     coap_send(&response, from);
+#ifdef ENABLE_DEBUG_COAP_UART
+  Serial.println("Send Coap Ack!");
+#endif
                     //DBG(mySerial_->println("ACTION: Sent ACK"));
                     break;
                 case ACK:
@@ -416,9 +437,13 @@ void Coap::receiver(uint8_t* buf, uint16_t from, uint8_t len) {
         if (msg.type_w() == CON) {
             response.set_type(ACK);
             response.set_mid(msg.mid_w());
-        } else
+        } else{
             response.set_type(NON);
+	}
         coap_send(&response, from);
+#ifdef ENABLE_DEBUG_COAP_UART
+  Serial.println("Send Coap Error Response!");
+#endif
         //DBG(mySerial_->println("ACTION: Sent reply"));
     }
 } // end of coap receiver
@@ -438,11 +463,11 @@ uint16_t Coap::coap_new_mid() {
     return mid_++;
 }
 
-CoapResource* Coap::find_resource(char * uri_path, size_t len) {
+CoapSensor* Coap::find_resource(char * uri_path, size_t len) {
     for (uint8_t i = 0; i < rcount; i++) {
         //DBG(mySerial_->println(resources_[*i].name()));
-        if (strncmp(uri_path, resources_[i].name(), len) == 0) {
-            return &(resources_[i]);
+        if (strncmp(uri_path, resources_[i]->get_name(), len) == 0) {
+            return resources_[i];
         }
     }
     return NULL;
@@ -560,7 +585,7 @@ void Coap::coap_retransmit_loop(void) {
 
 #ifdef ENABLE_OBSERVE
 
-uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* resource) {
+uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapSensor* resource) {
 
     for (uint8_t i = 0; i < CONF_MAX_OBSERVERS; i++) {
 
@@ -569,7 +594,7 @@ uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* 
             memset(observers[i].observe_token_, 0, observers[i].observe_token_len_);
             observers[i].observe_token_len_ = msg->token_len_w();
             memcpy(observers[i].observe_token_, msg->token_w(), msg->token_len_w());
-	    observers[i].observe_timestamp_ = millis() + ((unsigned long)resource->notify_time_w())*1000+(rand()%5000);
+	    observers[i].observe_timestamp_ = millis() + ((unsigned long)resource->get_notify_time())*1000+(rand()%5000);
             return 1;
         }
         if (observers[i].observe_id_ == 0) {
@@ -580,7 +605,7 @@ uint8_t Coap::coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* 
             observers[i].observe_last_mid_ = msg->mid_w();
             // ARDUINO
             //		  observers[i].observe_timestamp_ = millis() + 1000*resources_[resource].notify_time_w();
-            observers[i].observe_timestamp_ = millis() + ((unsigned long)resource->notify_time_w())*1000+(rand()%5000);
+            observers[i].observe_timestamp_ = millis() + ((unsigned long)resource->get_notify_time())*1000+(rand()%5000);
             observe_counter_++;
             return 1;
         }
@@ -620,26 +645,36 @@ void Coap::coap_notify() {
 	observer_t * observer = &(observers[observer_notify_counter]);
         
 	if (observer->observe_id_ != 0) {
-	  CoapResource* resource = observer->observe_resource_;
-	  
+	  CoapSensor* resource = observer->observe_resource_;
 	  if ((observer->observe_timestamp_ < millis()) || (resource->is_changed())) {
+#ifdef ENABLE_DEBUG_COAP_UART
+  Serial.print("Obs{");
+  Serial.print(observer_notify_counter);
+  Serial.print("}:");
+  Serial.print(observer->observe_timestamp_);
+  Serial.print(" < ");
+  Serial.print(millis());
+  Serial.print(" c:");
+  Serial.println(resource->is_changed());
+#endif
+
 	    coap_packet_t notification;
             uint8_t notification_size;
             //uint8_t output_data[CONF_LARGE_BUF_LEN];
             size_t output_data_len;
             memset(sendBuf_, 0, CONF_MAX_MSG_LEN);
-            observer->observe_timestamp_ = millis() + ((unsigned long)resource->notify_time_w())*1000;
+            observer->observe_timestamp_ = millis() + ((unsigned long)resource->get_notify_time())*1000;
 
             // send msg
             notification.init();
             notification.set_type(CON);
             notification.set_mid(coap_new_mid());
 
-            notification.set_code(resource->execute(COAP_GET, NULL, 0, output_data, &output_data_len, notification.uri_queries_w()));
+            notification.set_code(resource->callback(COAP_GET, NULL, 0, output_data, &output_data_len, notification.uri_queries_w()));
             notification.set_option(CONTENT_TYPE);
-            notification.set_content_type(resource->content_type());
+            notification.set_content_type(resource->get_content_type());
 	    notification.set_option(MAX_AGE);
-	    notification.set_max_age(resources_->notify_time_w());
+	    notification.set_max_age(resource->get_notify_time());
             notification.set_option(TOKEN);
             notification.set_token_len(observer->observe_token_len_);
             notification.set_token(observer->observe_token_);
@@ -694,6 +729,6 @@ void Coap::increase_observe_counter()
 void Coap::coap_check(void) {
     uint8_t i;
     for (i = 0; i < rcount; i++) {
-        resources_[i].check();
+        resources_[i]->check();
     }
 }
