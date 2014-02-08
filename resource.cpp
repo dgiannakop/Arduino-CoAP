@@ -20,28 +20,28 @@ CoapResource::CoapResource() {
 }
 
 CoapResource::CoapResource(CoapSensor * sensor) {
-    del_ = sensor;
+    _sensor = sensor;
     is_set_ = true;
 }
 
 coap_status_t CoapResource::execute(uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_data_len, queries_t queries) {
-    if (del_) {
+    if (_sensor) {
 
 	if (method == COAP_GET)
 	    method = GET;
 	else if (method == COAP_POST)
 	    method = POST;
-	return del_->callback(method, input_data, input_data_len, output_data, output_data_len, queries);
+	return _sensor->callback(method, input_data, input_data_len, output_data, output_data_len, queries);
     }
 }
 
 void CoapResource::check() {
-    del_->check();
+    _sensor->check();
 }
 
 void CoapResource::set_notify_time(uint16_t notify_time) {
     //    notify_time_ = notify_time;
-    del_->set_notify_time(notify_time);
+    _sensor->set_notify_time(notify_time);
 }
 
 bool CoapResource::is_set() {
@@ -49,11 +49,11 @@ bool CoapResource::is_set() {
 }
 
 char * CoapResource::name() {
-    return del_->get_name();
+    return _sensor->get_name();
 }
 
 uint8_t CoapResource::name_length() {
-    return strlen(del_->get_name());
+    return strlen(_sensor->get_name());
 }
 
 
@@ -62,25 +62,25 @@ uint8_t CoapResource::method_allowed(uint8_t method) {
 	method = 4;
     else if (method == 4)
 	method = 8;
-    return del_->get_method() & method;
+    return _sensor->get_method() & method;
 }
 
 uint16_t CoapResource::notify_time_w() {
-    return del_->get_notify_time();
+    return _sensor->get_notify_time();
 }
 
 bool CoapResource::fast_resource() {
-    return del_->get_fast();
+    return _sensor->get_fast();
 }
 
 uint8_t CoapResource::content_type() {
-    return del_->get_content_type();
+    return _sensor->get_content_type();
 }
 
 bool CoapResource::is_changed() {
-    return del_->is_changed();
+    return _sensor->is_changed();
 }
 
 void CoapResource::mark_notified() {
-    return del_->mark_notified();
+    return _sensor->mark_notified();
 }

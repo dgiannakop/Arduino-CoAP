@@ -69,7 +69,7 @@ public:
 
 private:
     bool is_set_;
-    CoapSensor *del_;
+    CoapSensor *_sensor;
     bool interrupt_flag_;
 };
 #endif

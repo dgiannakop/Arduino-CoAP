@@ -22,7 +22,6 @@
 //Software Reset
 #include <avr/wdt.h>
 #include "coap_conf.h"
-//#include "vector.h"
 #include "packet.h"
 #include "CoapSensor.h"
 
@@ -34,6 +33,8 @@
 typedef CoapPacket coap_packet_t;
 typedef CoapResource resource_t;
 
+static const char hereiam[]="hereiam";
+static const char wellknowncore[]= ".well-known/core";
 /**
  * The Coap Server Class.
  * 
@@ -89,7 +90,7 @@ public:
      * @param queries
      * @return 
      */
-    coap_status_t resource_discovery(uint8_t method, uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_len, queries_t queries);
+    coap_status_t resource_discovery(uint8_t* input_data, size_t input_data_len, uint8_t* output_data, size_t* output_len/*, queries_t queries*/);
     /**
      * Handles new incoming messages from XBEE.
      * @param 
@@ -131,7 +132,7 @@ public:
      * @param size
      * @param tries
      */
-    void coap_register_con_msg(uint16_t id, uint16_t mid, uint8_t *buf, uint8_t size, uint8_t tries);
+    void coap_register_con_msg(uint16_t id, uint16_t mid, uint8_t *buf, uint8_t size, uint8_t );
     /**
      * 
      * @param mid
@@ -148,45 +149,18 @@ public:
 #ifdef ENABLE_OBSERVE    
     uint8_t coap_add_observer(coap_packet_t *msg, uint16_t *id, CoapResource* resource_id);
     void coap_remove_observer(uint16_t mid);
-    void coap_notify_from_timer();
-    void coap_notify_from_interrupt(uint8_t resource_id);
     void coap_notify(void);
-    //uint16_t observe_counter();
-    void increase_observe_counter();
     bool coap_has_observers();
 #endif
 
-    /**
-     * 
-     * @param msg
-     * @param len
-     */
-    //String make_string(char* charArray, size_t charLen);
-//     /**
-//      * 
-//      * @param msg
-//      * @param len
-//      */
-//     void debug_msg(uint8_t* msg, uint8_t len);
-
-
 private:
 
-#ifdef ENABLE_DEBUG
-    // Serial debug
-    SoftwareSerial *mySerial_;
-#endif
     bool broadcasting;
     unsigned long last_broadcast;
-    char hereiam[8];
-
+    
     // Message ID
     uint16_t mid_;
 
-    // new vector type resources
-    // active requests vector
-    //active_requests_t active_requests_;
-    //char *largeBuf_;
     // Internal buffer for any reason
     uint8_t helperBuf_[CONF_HELPER_BUF_LEN];
     // Internal buffer for send
@@ -213,6 +187,12 @@ private:
     BaseRouting * routing_;
     char _name[20];
     uint16_t myAddress;
+    
+#ifdef ENABLE_DEBUG
+    // Serial debug
+    SoftwareSerial *mySerial_;
+#endif
+  
 };
 
 #endif
